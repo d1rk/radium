@@ -9,6 +9,7 @@
 namespace radium\util;
 
 use radium\extensions\errors\ConditionsException;
+use lithium\aop\Filters;
 use lithium\util\Text;
 use lithium\util\Set;
 
