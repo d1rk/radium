@@ -1,1 +1,17 @@
+#
+# radium: lithium application framework
+#
+# Copyright 2017, Dirk Brünsicke. All rights reserved. This source
+# code is distributed under the terms of the BSD 3-Clause License.
+# The full license text can be found in the LICENSE.txt file.
+#
+
+# OS X
 .DS_Store
+
+# Vim
+.*.sw[a-z]
+
+# PHPStorm
+.idea
+
