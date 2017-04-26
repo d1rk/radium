@@ -2,7 +2,7 @@
 /**
  * radium: lithium application framework
  *
- * @copyright     Copyright 2013, brünsicke.com GmbH (http://bruensicke.com)
+ * @copyright     Copyright 2017, Dirk Brünsicke (http://bruensicke.com)
  * @license       http://opensource.org/licenses/BSD-3-Clause The BSD License
  */
 
@@ -79,7 +79,7 @@ class RadiumController extends \radium\controllers\BaseController {
 		$models = new Collection(compact('data'));
 		if ($this->request->is('json')) {
 			$models->each(function($model) {
-				$schema = (is_callable(array($model, 'schema'))) ? $model::schema() : array(); 
+				$schema = (is_callable(array($model, 'schema'))) ? $model::schema() : array();
 				return array($model => ($schema) ? $schema->fields() : array());
 			});
 		}
