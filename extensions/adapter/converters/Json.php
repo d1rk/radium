@@ -12,6 +12,7 @@ use radium\util\Json as JsonFormat;
 use radium\extensions\errors\JsonException;
 use Exception;
 
+use lithium\aop\Filters;
 use lithium\util\Set;
 
 class Json extends \lithium\core\Object {
@@ -29,7 +30,7 @@ class Json extends \lithium\core\Object {
 		$defaults = array('assoc' => true, 'depth' => 512, 'default' => array(), 'flat' => false);
 		$options += $defaults;
 		$params = compact('content', 'data', 'options');
-		return $this->_filter(__METHOD__, $params, function($self, $params) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			extract($params);
 			try {
 				$config = JsonFormat::decode($content, $options['assoc'], $options['depth']);

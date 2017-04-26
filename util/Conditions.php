@@ -16,7 +16,7 @@ class Conditions extends \lithium\core\StaticObject {
 
 	public static function parse($conditions, $data, array $options = array()) {
 		$params = compact('conditions', 'data', 'options');
-		return static::_filter(__METHOD__, $params, function($self, $params) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			extract($params);
 			$defaults = array();
 			$options += $defaults;
@@ -25,7 +25,8 @@ class Conditions extends \lithium\core\StaticObject {
 				return eval("return (boolean)($check);");
 			}
 			// TODO: take care, that spaces are around operator
-			return $self::invokeMethod('compare', explode(" ", $check, 3));
+			list($value1, $operator, $value2) = explode(" ", $check, 3);
+			return static::compare($value1, $operator, $value2);
 		});
 	}
 
@@ -42,7 +43,7 @@ class Conditions extends \lithium\core\StaticObject {
 	 */
 	public static function check($field, $operator, $value = '') {
 		$params = compact('field', 'operator', 'value');
-		return static::_filter(__METHOD__, $params, function($self, $params) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			extract($params);
 			return eval("return (boolean)($field " . $operator . " $value);");
 		});
@@ -60,7 +61,7 @@ class Conditions extends \lithium\core\StaticObject {
 	 */
 	public static function compare($value1, $operator, $value2) {
 		$params = compact('value1', 'operator', 'value2');
-		return static::_filter(__METHOD__, $params, function($self, $params) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			extract($params);
 			switch (trim($operator)) {
 				case "=":  return (boolean) ($value1 == $value2);

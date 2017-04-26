@@ -8,6 +8,7 @@
 
 namespace radium\models;
 
+use lithium\aop\Filters;
 use lithium\util\Set;
 use radium\data\Converter;
 
@@ -147,17 +148,17 @@ class Versions extends \radium\models\BaseModel {
 		$defaults = array('force' => false);
 		$options += $defaults;
 		$params = compact('entity', 'options');
-		return static::_filter(__METHOD__, $params, function($self, $params) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			extract($params);
 			$model = $entity->model();
-			if ($model == $self || !$entity->exists()) {
+			if ($model == 'Versions' || !$entity->exists()) { #TODO: Check if first part is correct
 				return false;
 			}
 			$key = $model::meta('key');
 			$foreign_id = (string) $entity->$key;
 
 			$export = $entity->export();
-			$updated = Set::diff($self::cleanData($export['update']), $self::cleanData($export['data']));
+			$updated = Set::diff(static::cleanData($export['update']), static::cleanData($export['data']));
 
 			if (empty($updated)) {
 				if (!$options['force']) {
@@ -166,7 +167,7 @@ class Versions extends \radium\models\BaseModel {
 				$updated = $entity->data();
 			}
 
-			$self::update(array('status' => 'outdated'), compact('model', 'foreign_id'));
+			static::update(array('status' => 'outdated'), compact('model', 'foreign_id'));
 
 			$data = array(
 				'model' => $model,
@@ -178,7 +179,7 @@ class Versions extends \radium\models\BaseModel {
 				'created' => time(),
 			);
 
-			$version = $self::create($data);
+			$version = static::create($data);
 			if (!$version->save()) {
 				return false;
 			}
@@ -201,9 +202,9 @@ class Versions extends \radium\models\BaseModel {
 		$defaults = array('validate' => false, 'callbacks' => false);
 		$options += $defaults;
 		$params = compact('id', 'options');
-		return static::_filter(__METHOD__, $params, function($self, $params) use ($defaults) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) use ($defaults) {
 			extract($params);
-			$version = $self::first($id);
+			$version = static::first($id);
 			if (!$version) {
 				return false;
 			}
@@ -221,7 +222,7 @@ class Versions extends \radium\models\BaseModel {
 				return false;
 			}
 
-			$self::update(array('status' => 'outdated'), compact('model', 'foreign_id'));
+			static::update(array('status' => 'outdated'), compact('model', 'foreign_id'));
 			return $version->save(array('status' => 'active'), $defaults);
 		});
 	}

@@ -8,6 +8,8 @@
 
 namespace radium\extensions\adapter\converters;
 
+use lithium\aop\Filters;
+
 class Markdown extends \lithium\core\Object {
 
 	/**
@@ -23,7 +25,7 @@ class Markdown extends \lithium\core\Object {
 		$defaults = array('allowed' => true);
 		$options += $defaults;
 		$params = compact('content', 'data', 'options');
-		return $this->_filter(__METHOD__, $params, function($self, $params) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			// TODO: parse with markdown parser
 			return $params['content'];
 		});

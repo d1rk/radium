@@ -8,6 +8,8 @@
 
 namespace radium\data;
 
+use lithium\aop\Filters;
+
 class Converter extends \lithium\core\Adaptable {
 
 	/**
@@ -70,9 +72,9 @@ class Converter extends \lithium\core\Adaptable {
 		$defaults = array();
 		$options += $defaults;
 		$params = compact('name', 'content', 'data', 'options');
-		return static::_filter(__FUNCTION__, $params, function($self, $params) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			extract($params);
-			return $self::adapter($name)->get($content, $data, $options);
+			return static::adapter($name)->get($content, $data, $options);
 		});
 	}
 

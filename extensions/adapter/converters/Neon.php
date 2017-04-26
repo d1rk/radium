@@ -12,6 +12,7 @@ use radium\util\Neon as NeonFormatter;
 use Neon\NeonException;
 use Exception;
 
+use lithium\aop\Filters;
 use lithium\util\Set;
 
 class Neon extends \lithium\core\Object {
@@ -29,7 +30,7 @@ class Neon extends \lithium\core\Object {
 		$defaults = array('default' => array(), 'flat' => false);
 		$options += $defaults;
 		$params = compact('content', 'data', 'options');
-		return $this->_filter(__METHOD__, $params, function($self, $params) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			extract($params);
 			try {
 				$config = NeonFormatter::decode($content);
