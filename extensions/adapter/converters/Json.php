@@ -27,12 +27,17 @@ class Json extends \lithium\core\Object {
 	 * @filter
 	 */
 	public function get($content, $data = null, array $options = array()) {
-		$defaults = array('assoc' => true, 'depth' => 512, 'default' => array(), 'flat' => false);
+		$defaults = array('assoc' => true, 'depth' => 512, 'default' => array(), 'flat' => false, 'clean' => false);
 		$options += $defaults;
 		$params = compact('content', 'data', 'options');
 		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			extract($params);
 			try {
+				if ($options['clean']) {
+					$content = str_replace(array("\n","\r"),"\\n", $content);
+					$content = preg_replace('/([{,]+)(\s*)([^"]+?)\s*:/','$1"$3":', $content);
+					$content = preg_replace('/(,)\s*}$/','}', $content);
+				}
 				$config = JsonFormat::decode($content, $options['assoc'], $options['depth']);
 			} catch(JsonException $e) {
 				return $options['default'];

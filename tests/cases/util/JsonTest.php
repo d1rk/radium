@@ -38,7 +38,28 @@ class JsonTest extends \lithium\test\Unit {
 
 	public function testStateMismatchError() {
 		$expected = json_encode($this->_data).'}';
-		$this->assertException('JSON Error: State mismatch', function() use ($expected) {
+		$this->assertException('JSON Error: Syntax error, malformed JSON', function() use ($expected) {
+			$result = Json::decode($expected);
+		});
+	}
+
+	public function testInvalidSingleQuotes() {
+		$expected = "{ 'bar': 'baz' }";
+		$this->assertException('JSON Error: Syntax error, malformed JSON', function() use ($expected) {
+			$result = Json::decode($expected);
+		});
+	}
+
+	public function testNameNotSingleQuoted() {
+		$expected = '{ bar: "baz" }';
+		$this->assertException('JSON Error: Syntax error, malformed JSON', function() use ($expected) {
+			$result = Json::decode($expected);
+		});
+	}
+
+	public function testTrailingCommasNotAllowed() {
+		$expected = '{ bar: "baz", }';
+		$this->assertException('JSON Error: Syntax error, malformed JSON', function() use ($expected) {
 			$result = Json::decode($expected);
 		});
 	}
