@@ -1,4 +1,4 @@
-Copyright (c) 2013, brünsicke.com GmbH http://bruensicke.com/
+Copyright (c) 2017, Dirk Brünsicke, https://d1rk.com/
 
 All rights reserved.
 
@@ -7,7 +7,7 @@ are permitted provided that the following conditions are met:
 
    * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-   * Neither the name of Dirk Brünsicke, brünsicke.com, brünsicke.com GmbH, 
+   * Neither the name of Dirk Brünsicke, brünsicke.com, brünsicke.com GmbH,
     nor the names of its contributors may be used to endorse or promote products
     derived from this software without specific prior written permission.
 
