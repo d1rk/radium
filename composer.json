@@ -20,5 +20,5 @@
 		"unionofrad/lithium": "1.*",
 		"bruensicke/li3_bootstrap": "dev-master",
 		"bruensicke/li3_mustache": "dev-master"
-	},
+	}
 }
