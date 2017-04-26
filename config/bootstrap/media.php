@@ -6,9 +6,10 @@
  * @license       http://opensource.org/licenses/BSD-3-Clause The BSD License
  */
 
+use lithium\aop\Filters;
 use lithium\action\Dispatcher;
-use lithium\core\Environment;
 use lithium\action\Response;
+use lithium\core\Environment;
 use lithium\net\http\Media;
 use lithium\util\Set;
 use lithium\util\Text;
@@ -95,20 +96,23 @@ Autoloader::register();
 /*
  * this filter allows automatic linking and loading of assets from `webroot` folder
  */
-Dispatcher::applyFilter('_callable', function($self, $params, $chain) {
-	list($library, $asset) = explode('/', ltrim($params['request']->url, '/'), 2) + array("", "");
+Filters::apply(Dispatcher::class, '_callable', function($params, $next) {
+	$url = ltrim($params['request']->url, '/');
+	list($library, $asset) = explode('/', $url, 2) + ["", ""];
+
 	if ($asset && $library == 'radium' && ($path = Media::webroot($library)) && file_exists($file = "{$path}/{$asset}")) {
 		return function() use ($file) {
 			$info = pathinfo($file);
 			$media = Media::type($info['extension']);
 			$content = (array) $media['content'];
 
-			return new Response(array(
-				'headers' => array('Content-type' => reset($content)),
+			return new Response([
+				'headers' => ['Content-type' => reset($content)],
 				'body' => file_get_contents($file)
-			));
+			]);
 		};
 	}
-	return $chain->next($self, $params, $chain);
+	return $next($params);
 });
+
 
