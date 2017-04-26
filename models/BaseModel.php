@@ -177,7 +177,7 @@ class BaseModel extends \lithium\data\Model {
 	 */
 	protected $_meta = array(
 		'versions' => true,
-		'neon' => true,
+		'neon' => false,
 	);
 
 	protected static $_rss = array(
