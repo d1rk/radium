@@ -21,6 +21,8 @@ class MockConfigurations extends \radium\models\Configurations {
 		$now = date('Y-m-d h:i:s');
 
 		switch ($type) {
+			case 'count':
+				return 3;
 			case 'first':
 				return new Document(array('data' => array(
 					'_id' => 1,
