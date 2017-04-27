@@ -11,8 +11,8 @@
 			"homepage": "https://github.com/d1rk"
 		}
 	],
-	"support": {
-		"issues": "https://github.com/d1rk/radium/issues"
+	"config": {
+		"vendor-dir": "libraries"
 	},
 	"require": {
 		"php": ">=5.4",
