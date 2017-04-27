@@ -8,6 +8,8 @@
 
 namespace radium\extensions\adapter\converters;
 
+use lithium\aop\Filters;
+
 class Plain extends \lithium\core\Object {
 
 	/**
@@ -23,7 +25,7 @@ class Plain extends \lithium\core\Object {
 		$defaults = array('stripHtml' => true);
 		$options += $defaults;
 		$params = compact('content', 'data', 'options');
-		return $this->_filter(__METHOD__, $params, function($self, $params) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			if (is_array($params['content'])) {
 				return array_map(array(__CLASS__, 'render'), $params['content'], $params['options']);
 			}

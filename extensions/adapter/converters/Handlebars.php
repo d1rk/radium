@@ -8,6 +8,8 @@
 
 namespace radium\extensions\adapter\converters;
 
+use lithium\aop\Filters;
+
 use Handlebars\Handlebars as Renderer;
 
 class Handlebars extends \lithium\core\Object {
@@ -31,7 +33,7 @@ class Handlebars extends \lithium\core\Object {
 		$defaults = array('allowed' => true);
 		$options += $defaults;
 		$params = compact('content', 'data', 'options');
-		return $this->_filter(__METHOD__, $params, function($self, $params) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			$renderer = new Renderer($params['options']);
 			return $renderer->render($params['content'], $params['data']);
 		});

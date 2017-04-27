@@ -35,7 +35,7 @@ class ScaffoldControllerTest extends \lithium\test\Unit {
 		$scaffold = $this->_controller->access('scaffold');
 		$expected = array(
 			'base' => '/radium/configurations',
-			'controller' => 'Configurations',
+			'controller' => 'configurations',
 			'library' => 'radium',
 			'class' => 'MockConfigurations',
 			'model' => 'radium\tests\mocks\data\MockConfigurations',

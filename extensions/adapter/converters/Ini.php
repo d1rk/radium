@@ -11,6 +11,7 @@ namespace radium\extensions\adapter\converters;
 use radium\util\IniFormat;
 use radium\extensions\errors\IniFormatException;
 
+use lithium\aop\Filters;
 use lithium\util\Set;
 
 class Ini extends \lithium\core\Object {
@@ -28,7 +29,7 @@ class Ini extends \lithium\core\Object {
 		$defaults = array('default' => null, 'flat' => false);
 		$options += $defaults;
 		$params = compact('content', 'data', 'options');
-		return $this->_filter(__METHOD__, $params, function($self, $params) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			extract($params);
 			try {
 				$config = IniFormat::parse($content);

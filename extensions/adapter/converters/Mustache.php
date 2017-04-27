@@ -8,6 +8,7 @@
 
 namespace radium\extensions\adapter\converters;
 
+use lithium\aop\Filters;
 use li3_mustache\libraries\Mustache as Renderer;
 
 class Mustache extends \lithium\core\Object {
@@ -25,7 +26,7 @@ class Mustache extends \lithium\core\Object {
 		$defaults = array('allowed' => true);
 		$options += $defaults;
 		$params = compact('content', 'data', 'options');
-		return $this->_filter(__METHOD__, $params, function($self, $params) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			$renderer = new Renderer($params['content'], $params['data']);
 			return $renderer->render();
 		});

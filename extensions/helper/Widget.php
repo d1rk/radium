@@ -12,7 +12,7 @@ use radium\models\Configurations;
 use lithium\template\TemplateException;
 
 use lithium\core\Environment;
-use lithium\util\String;
+use lithium\util\Text;
 
 class Widget extends \lithium\template\Helper {
 
@@ -73,7 +73,7 @@ class Widget extends \lithium\template\Helper {
 			}
 			$name = $options['prefix'].$widget;
 
-			$config = Configurations::get(String::insert($options['pattern'], compact('name')));
+			$config = Configurations::get(Text::insert($options['pattern'], compact('name')));
 			$result[] = ($config)
 				? $this->render($config, $options)
 				: $this->parse($name, $data, $options);

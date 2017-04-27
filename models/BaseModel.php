@@ -8,6 +8,8 @@
 
 namespace radium\models;
 
+use lithium\aop\Filters;
+
 use radium\models\Configurations;
 use radium\util\Neon;
 use radium\util\IniFormat;
@@ -15,7 +17,7 @@ use radium\util\IniFormat;
 use lithium\core\Libraries;
 use lithium\core\Environment;
 use lithium\util\Set;
-use lithium\util\String;
+use lithium\util\Text;
 use lithium\util\Validator;
 use lithium\util\Inflector;
 
@@ -177,7 +179,7 @@ class BaseModel extends \lithium\data\Model {
 	 */
 	protected $_meta = array(
 		'versions' => true,
-		'neon' => true,
+		'neon' => false,
 	);
 
 	protected static $_rss = array(
@@ -367,14 +369,14 @@ class BaseModel extends \lithium\data\Model {
 	 */
 	public static function search($slug, $status = 'active', array $options = array()) {
 		$params = compact('slug', 'status', 'options');
-		return static::_filter(get_called_class() . '::search', $params, function($self, $params) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			extract($params);
 			$options['conditions'] = array(
 				'slug' => array('like' => "/$slug/i"),
 				'status' => $status,
 				'deleted' => null, // only not deleted
 			);
-			return $self::find('all', $options);
+			return static::find('all', $options);
 		});
 	}
 
@@ -425,7 +427,7 @@ class BaseModel extends \lithium\data\Model {
 	 */
 	public static function load($id, $status = 'active', array $options = array()) {
 		$params = compact('id', 'status', 'options');
-		return static::_filter(get_called_class() . '::load', $params, function($self, $params) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			extract($params);
 			$defaults = array('key' => 'slug');
 			$options += $defaults;
@@ -443,7 +445,7 @@ class BaseModel extends \lithium\data\Model {
 				: null;
 
 			unset($options['key']);
-			$result = $self::find('first', $options);
+			$result = static::find('first', $options);
 			if (!$result) {
 				return false;
 			}
@@ -560,7 +562,7 @@ class BaseModel extends \lithium\data\Model {
 		$defaults = array('updated' => true);
 		$options += $defaults;
 		$params = compact('field', 'data', 'options');
-		return static::_filter(get_called_class() . '::multiUpdate', $params, function($self, $params) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			extract($params);
 			$key = static::key();
 			$result = array();
@@ -592,14 +594,14 @@ class BaseModel extends \lithium\data\Model {
 		$defaults = array('updated' => true);
 		$options += $defaults;
 		$params = compact('entity', 'values', 'options');
-		return $this->_filter(get_called_class() . '::updateFields', $params, function($self, $params) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			extract($params);
-			$key = $self::key();
+			$key = static::key();
 			$conditions = array($key => $entity->id());
 			if ($options['updated']) {
 				$values['updated'] = time();
 			}
-			$success = $self::update($values, $conditions);
+			$success = static::update($values, $conditions);
 			if (!$success) {
 				$model = $entity->model();
 				$msg = sprintf('Update of %s [%s] returned false', $model, $entity->id());
@@ -760,7 +762,7 @@ class BaseModel extends \lithium\data\Model {
 							'host' => $_SERVER['HTTP_HOST'],
 						)
 					);
-					$item[$field] = String::insert($source, $replace);
+					$item[$field] = Text::insert($source, $replace);
 					break;
 				case isset($entity->$source):
 					$item[$field] = $entity->$source;
@@ -850,7 +852,7 @@ class BaseModel extends \lithium\data\Model {
 	 */
 	public function _ini($entity, $field) {
 		$params = compact('entity', 'field');
-		return $this->_filter(get_called_class() . '::_ini', $params, function($self, $params) {
+		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			extract($params);
 			if (empty($entity->$field)) {
 				return array();
