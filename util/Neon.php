@@ -14,16 +14,24 @@ use lithium\core\Libraries;
 use lithium\util\Collection;
 use lithium\data\collection\DocumentSet;
 
-use Neon\Neon as NeonRenderer;
+use Nette\Neon\Encoder;
+use Nette\Neon\Decoder;
 
 class Neon {
 
 	/**
-	 * holds the renderer instance
+	 * holds the Encoder instance
 	 *
 	 * @var object
 	 */
-	public static $_renderer = null;
+	public static $_encoder = null;
+
+	/**
+	 * holds the Decoder instance
+	 *
+	 * @var object
+	 */
+	public static $_decoder = null;
 
 	/**
 	 * controls where neon-files can reside inside a library and automatically be found
@@ -43,7 +51,7 @@ class Neon {
 	 * @return string the neon markup that represents given `$input`
 	 */
 	public static function encode($input, $options = null) {
-		return static::renderer()->encode($input, $options);
+		return static::encoder()->encode($input, $options);
 	}
 
 	/**
@@ -56,7 +64,7 @@ class Neon {
 	 * @return mixed generated php structure derived from given `$input`
 	 */
 	public static function decode($content) {
-		return static::renderer()->decode($content);
+		return static::decoder()->decode($content);
 	}
 
 	/**
@@ -77,16 +85,27 @@ class Neon {
 	}
 
 	/**
-	 * instantiates and returns instance of neon-renderer
+	 * instantiates and returns instance of neon encoder
 	 *
 	 * @return object instance of NeonRenderer
 	 */
-	public static function renderer() {
-		if (is_null(static::$_renderer)) {
-			Libraries::add('Neon', array('path' => RADIUM_PATH . '/libraries/neon'));
-			static::$_renderer = new NeonRenderer();
+	public static function encoder() {
+		if (is_null(static::$_encoder)) {
+			static::$_encoder = new Encoder;
 		}
-		return static::$_renderer;
+		return static::$_encoder;
+	}
+
+	/**
+	 * instantiates and returns instance of neon decoder
+	 *
+	 * @return object instance of NeonRenderer
+	 */
+	public static function decoder() {
+		if (is_null(static::$_decoder)) {
+			static::$_decoder = new Decoder;
+		}
+		return static::$_decoder;
 	}
 
 	/**
