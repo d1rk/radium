@@ -82,17 +82,6 @@ Media::type('csv', 'application/csv', array('encode' => function($data) {
 	return ob_get_clean();
 }));
 
-// Libraries::add('Handlebars', array(
-//     // "prefix" => "Handlebars_",
-//     // "includePath" => LITHIUM_LIBRARY_PATH, // or LITHIUM_APP_PATH . '/libraries'
-//     // "bootstrap" => "Loader/Autoloader.php",
-//     // "loader" => array("Handlebars", "register"),
-//     // "transform" => function($class) { return str_replace("_", "/", $class) . ".php"; }
-// ));
-
-require RADIUM_PATH . '/libraries/Handlebars/Autoloader.php';
-Autoloader::register();
-
 /*
  * this filter allows automatic linking and loading of assets from `webroot` folder
  */
