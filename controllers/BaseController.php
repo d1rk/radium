@@ -86,7 +86,7 @@ class BaseController extends \lithium\action\Controller {
 			if (empty($value) || $field == 'query') {
 				continue;
 			}
-			$result[$field] = array_filter((array) $value);
+			$result[$field] = array_values(array_filter((array) $value));
 		}
 		$result = array_filter($result);
 		if (!empty($conditions['query'])) {
