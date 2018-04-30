@@ -65,10 +65,11 @@ class Handlebars extends \lithium\template\Helper {
 	 * @return string rendered html of element template
 	 */
 	public function element($element, array $data = array(), array $options = array()) {
+		$options += ['template' => $element];
 		try {
 			return $this->_context->view()->render(compact('element'), $data, $options);
 		} catch (TemplateException $e) {
-			return $this->_context->view()->render(compact('element'), $data, $options);
+			return $this->_context->view()->render('element', $data, $options);
 		}
 		return '';
 	}
