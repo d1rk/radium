@@ -15,9 +15,7 @@
 		"vendor-dir": "libraries"
 	},
 	"require": {
-		"php": ">=5.4",
 		"composer/installers": "1.*",
-		"unionofrad/lithium": "1.*",
 		"nette/neon": "^2.4"
 	}
 }
