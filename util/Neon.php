@@ -14,7 +14,7 @@ use lithium\core\Libraries;
 use lithium\util\Collection;
 use lithium\data\collection\DocumentSet;
 
-use Neon\Neon as NeonRenderer;
+use Nette\Neon\Neon as NeonRenderer;
 
 class Neon {
 
