@@ -6,6 +6,37 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html), starting with v1.1.0.
 
 
+## 1.2.0 - 2018-04-30
+
+### Added
+- Changelog
+
+### Changed
+- Switched dependencies completely, requires lithium 1.2 (new mongodb-driver) to run
+
+### Removed
+- Removed Dependency for PHP constraint, lithium and alcaeus MongoDB compatibility-layer
+
+### Fixed
+- Wrong class usage of Neon Renderer
+
+
+## 1.1.2 - 2017-05-05
+
+### Added
+- Nothing.
+
+### Changed
+- Dependency Management 
+
+### Removed
+- dependency to alcaeus MongoDB compatibility layer
+
+### Fixed
+- NeonRenderer
+- Doing faceted searches via URL parameters in scaffolded views
+
+
 ## 1.1.1 - 2017-05-05
 
 ### Improvements
