@@ -157,12 +157,7 @@ var Radium = new function ($) {
 			if (!valid) {
 				return;
 			}
-			var mom = 0;
-			if (typeof(date)=='number') {
-				mom = moment(date*1000);
-			} else {
-				mom = moment(date);
-			}
+			var mom = moment(date);
 			$this.html(mom.fromNow());
 		});
 	}
