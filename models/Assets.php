@@ -17,7 +17,7 @@ use lithium\action\Response;
 
 use Exception;
 
-class Assets extends \radium\models\BaseModel {
+class Assets extends \radium\models\DataModel {
 
 	/**
 	 * Custom type options

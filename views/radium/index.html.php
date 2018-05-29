@@ -24,7 +24,7 @@
         <li><?= $this->html->link('Configurations', array('library' => 'radium', 'controller' => 'configurations', 'action' => 'index')); ?></li>
         <li><?= $this->html->link('Contents', array('library' => 'radium', 'controller' => 'contents', 'action' => 'index')); ?></li>
         <li><?= $this->html->link('Pages', array('library' => 'radium', 'controller' => 'pages', 'action' => 'index')); ?></li>
-        <li><?= $this->html->link('Versions', array('library' => 'radium', 'controller' => 'versions', 'action' => 'index')); ?></li>
+        <li><?= $this->html->link('Revisions', array('library' => 'radium', 'controller' => 'revisions', 'action' => 'index')); ?></li>
     </ul>
     <hr />
     <h4>Extras</h4>

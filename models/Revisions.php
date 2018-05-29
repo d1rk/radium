@@ -12,26 +12,29 @@ use lithium\aop\Filters;
 use lithium\util\Set;
 use radium\data\Converter;
 
-class Versions extends \radium\models\BaseModel {
+class Revisions extends \radium\models\DataModel {
 
 	/**
 	 * Custom type options
 	 *
 	 * @var array
 	 */
-	public static $_status = array(
+	public static $_status = [
 		'active' => 'Active',
 		'outdated' => 'Outdated',
 		'review' => 'Review',
 		'approved' => 'Approved',
-	);
+	];
 
 	/**
 	 * Custom type options
 	 *
 	 * @var array
 	 */
-	public static $_types = array();
+	public static $_types = [
+		'auto' => 'Automatic Snapshot',
+		'manual' => 'Manually saved Snapshot'
+	];
 
 	/**
 	 * Stores the data schema.
@@ -39,45 +42,86 @@ class Versions extends \radium\models\BaseModel {
 	 * @see lithium\data\source\MongoDb::$_schema
 	 * @var array
 	 */
-	protected $_schema = array(
-		'model' => array('type' => 'string', 'default' => '', 'null' => false),
-		'foreign_id' => array('type' => 'string', 'default' => '', 'null' => false),
-		'data' => array('type' => 'string'),
-		'fields' => array('type' => 'object'),
-		'approved' => array('type' => 'datetime'),
-	);
+	protected $_schema = [
+		'_id' => ['type' => 'id'],
+
+		'name' => ['type' => 'string', 'default' => '', 'null' => false],
+		'type' => ['type' => 'string', 'default' => 'auto'],
+		'status' => ['type' => 'string', 'default' => 'active', 'null' => false],
+		'notes' => ['type' => 'string', 'default' => '', 'null' => false],
+
+		'model' => ['type' => 'string', 'default' => '', 'null' => false],
+		'foreign_id' => ['type' => 'string', 'default' => '', 'null' => false],
+		'data' => ['type' => 'string'],
+		'modified' => ['type' => 'object'],
+		'approved' => ['type' => 'datetime'],
+
+		'created' => ['type' => 'datetime', 'default' => '', 'null' => false],
+		'updated' => ['type' => 'datetime'],
+		'deleted' => ['type' => 'datetime'],
+	];
 
 	/**
 	 * Validation rules
 	 *
 	 * @var array
 	 */
-	public $validates = array(
-		'_id' => array(
-			array('notEmpty', 'message' => 'a unique _id is required.', 'last' => true, 'on' => 'update'),
-		),
-		'model' => array(
-			array('notEmpty', 'message' => 'a model is required.'),
-		),
-		'foreign_id' => array(
-			array('notEmpty', 'message' => 'a foreign id is required.'),
-		),
-		'data' => array(
-			array('notEmpty', 'message' => 'content is required.'),
-		),
-	);
+	public $validates = [
+		'_id' => [
+			['notEmpty', 'message' => 'a unique _id is required.', 'last' => true, 'on' => 'update'],
+		],
+		'name' => [
+			['notEmpty', 'message' => 'a name is required.', 'last' => true],
+		],
+		'type' => [
+			['notEmpty', 'message' => 'Please specify a type'],
+			['type', 'message' => 'Type is unknown. Please adjust.'],
+		],
+		'status' => [
+			['notEmpty', 'message' => 'Please specify a status'],
+			['status', 'message' => 'Status is unknown. Please adjust.'],
+		],
+
+		'model' => [
+			['notEmpty', 'message' => 'a model is required.'],
+		],
+		'foreign_id' => [
+			['notEmpty', 'message' => 'a foreign id is required.'],
+		],
+		'data' => [
+			['notEmpty', 'message' => 'data is required.'],
+		],
+	];
+
+	/**
+	 * Custom actions available on this object
+	 *
+	 * @var array
+	 */
+	protected static $_actions = [
+		'first' => [
+			'delete' => ['icon' => 'remove', 'class' => 'hover-danger', 'data-confirm' => 'Do you really want to delete this record?'],
+			'export' => ['icon' => 'download'],
+			'edit' => ['icon' => 'pencil2', 'class' => ''],
+			'restore' => ['icon' => 'spinner7', 'class' => 'hover-success', 'data-confirm' => 'Do you  want to restore to this revision?'],
+		],
+		'all' => [
+			'import' => ['icon' => 'upload'],
+			'export' => ['icon' => 'download'],
+		]
+	];
 
 	/**
 	 * Default query parameters.
 	 *
 	 * @var array
 	 */
-	protected $_query = array(
+	protected $_query = [
 		'limit' => 200,
-		'order' => array(
+		'order' => [
 			'created' => 'DESC',
-		),
-	);
+		],
+	];
 
 	/**
 	 * Returns list of available Versions for a given model.
@@ -87,7 +131,7 @@ class Versions extends \radium\models\BaseModel {
 	 * @param array $options additional find-options
 	 * @return object A Collection object of all found Versions
 	 */
-	public static function available($model, $id = null, array $options = array()) {
+	public static function available($model, $id = null, array $options = []) {
 		$conditions = compact('model');
 		if (!empty($id)) {
 			$key = $model::meta('key');
@@ -100,87 +144,53 @@ class Versions extends \radium\models\BaseModel {
 
 
 	/**
-	 * This method generates a new version.
+	 * This method generates a new revision.
 	 *
 	 * It creates a duplication of the object, to allow restoring. It marks all prior
 	 * versions as `outdated` and the new one as `active`.
 	 *
-	 * You probably want to create a new version of an entity, whenever save is called. To achieve
-	 * this, you have to take care, all data is set into the entity and Versions::add with updated
-	 * entity is called.
-	 *
-	 * In the following example you can see, how a meta-field, `versions` is used, to decide if
-	 * a version needs to be created, or not.
-	 *
-	 * {{{
-	 *	public function save($entity, $data = array(), array $options = array()) {
-	 *		if (!empty($data)) {
-	 *			$entity->set($data);
-	 *		}
-	 *		if (!isset($options['callbacks']) || $options['callbacks'] !== false) {
-	 *			$versions = static::meta('versions');
-	 *			if (($versions === true) || (is_callable($versions) && $versions($entity, $options))) {
-	 *				$version_id = Versions::add($entity, $options);
-	 *				if ($version_id) {
-	 *					$entity->set(compact('version_id'));
-	 *				}
-	 *			}
-	 *		}
-	 *		return parent::save($entity, null, $options);
-	 *	}
-	 * }}}
-	 *
-	 * You have to set `versions` to true, in meta like this:
-	 *
-	 * {{{
-	 *  $model::meta('versions', true);
-	 * // OR
-	 *  static::meta('versions', function($entity, $options){
-	 *		return (bool) Environment::is('production');
-	 *	});
-	 * }}}
-	 *
 	 * @param object $entity the instance, that needs to created a new version for
+	 * @param array $modified The modified data of this record as difference to prior revision
 	 * @param array $options additional options
 	 * @filter
 	 */
-	public static function add($entity, array $options = array()) {
-		$defaults = array('force' => false);
+	public static function add($entity, array $modified = [], array $options = []) {
+		$defaults = ['force' => false];
 		$options += $defaults;
-		$params = compact('entity', 'options');
+		$params = compact('entity', 'modified', 'options');
 		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
-			extract($params);
+			$entity = $params['entity'];
+			$modified = $params['modified'];
+			$options = $params['options'];
 			$model = $entity->model();
-			if ($model == 'Versions' || !$entity->exists()) { #TODO: Check if first part is correct
+
+			if ($model == 'radium\models\Versions') {
 				return false;
 			}
 			$key = $model::meta('key');
 			$foreign_id = (string) $entity->$key;
 
-			$export = $entity->export();
-			$updated = Set::diff(static::cleanData($export['update']), static::cleanData($export['data']));
-
-			if (empty($updated)) {
+			if (empty($modified)) {
 				if (!$options['force']) {
 					return false;
 				}
-				$updated = $entity->data();
+				$modified = $entity->data();
 			}
 
-			static::update(array('status' => 'outdated'), compact('model', 'foreign_id'));
+			static::update(['status' => 'outdated'], compact('model', 'foreign_id'));
 
-			$data = array(
+			$data = [
 				'model' => $model,
 				'foreign_id' => $foreign_id,
 				'status' => 'active',
 				'name' => (string) $entity->title(),
-				'fields' => $updated,
+				'modified' => $modified,
 				'data' => json_encode($entity->data()),
 				'created' => time(),
-			);
+			];
 
 			$version = static::create($data);
-			if (!$version->save()) {
+			if (!$version->save(null, ['validate' => false])) {
 				return false;
 			}
 			return $version->id();
@@ -198,8 +208,8 @@ class Versions extends \radium\models\BaseModel {
 	 * @return true on success, false otherwise
 	 * @filter
 	 */
-	public static function restore($id, array $options = array()) {
-		$defaults = array('validate' => false, 'callbacks' => false);
+	public static function restore($id, array $options = []) {
+		$defaults = ['validate' => false, 'callbacks' => false];
 		$options += $defaults;
 		$params = compact('id', 'options');
 		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) use ($defaults) {
@@ -222,8 +232,8 @@ class Versions extends \radium\models\BaseModel {
 				return false;
 			}
 
-			static::update(array('status' => 'outdated'), compact('model', 'foreign_id'));
-			return $version->save(array('status' => 'active'), $defaults);
+			static::update(['status' => 'outdated'], compact('model', 'foreign_id'));
+			return $version->save(['status' => 'active'], $defaults);
 		});
 	}
 
@@ -233,7 +243,7 @@ class Versions extends \radium\models\BaseModel {
 	 * @param array $data passed in data
 	 * @return array returns data, without continaing objects
 	 */
-	public static function cleanData(array $data = array()) {
+	public static function cleanData(array $data = []) {
 		foreach($data as $key => $item) {
 			if (is_array($item)) {
 				$data[$key] = static::cleanData($item);
@@ -244,6 +254,7 @@ class Versions extends \radium\models\BaseModel {
 		}
 		return $data;
 	}
+
 }
 
 ?>

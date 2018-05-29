@@ -6,15 +6,95 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html), starting with v1.1.0.
 
 
-## 1.2.1 - TBD
+## 1.3.0 - TBD
 
 ### Added
 
-- Nothing.
+- Dependency to li3_behaviors added, as this plugin will be integrated into lithium 2.0.
+  This allows Managing and loading of Behaviors on Models like this:
+
+  ```php
+    // ...
+    class Posts extends \lithium\data\Model {
+
+       use li3_behaviors\data\model\Behaviors;
+
+       protected $_actsAs = [
+           'Softdeletable' => ['field' => 'deleted']
+       ];
+        
+       // ...
+  ```
+
+  The Behavior Trait makes it easy to attach/detach and/or configure Behaviors on Models
+  like that:
+
+  ```php
+    // Bind the Softdeletable behavior with configuration.
+    Posts::bindBehavior('Softdeletable', ['field' => 'slug', 'label' => 'title']);
+
+    // Accessing configuration.
+    Posts::behavior('Softdeletable')->config();
+    Posts::behavior('Softdeletable')->config('field');
+
+    // Updating configuration.
+    Posts::behavior('Softdeletable')->config('field', 'alt');
+
+    // Unbinding it again.
+    Posts::unbindBehavior('Softdeletable');
+  ```
+
+  See [github.com/UnionOfRad/li3_behaviors](https://github.com/UnionOfRad/li3_behaviors)
+  for more information on how to use Behaviors.
+
+- Most of the BaseModels core functionality is going to be moved to Behaviors to allow
+  for easier usage of these, without the need to derive your Models from BaseModel.
+  To simplify this even more, we split the Code in the BaseModel into a Trait 
+  `Base` that holds some of the generic functionality for Models.
+
+- Added new Behavior `SoftDeletable` which allows soft-deletion of records, i.e. marking
+  them as deleted, instead of removing them physically. Usage is identical to the
+  imlementation in the 1.* releases, so there is no need to adapt your code accordingly.
+
+  This Behavior can be installed into your Models like this:
+
+  ```php
+       protected $_actsAs = [
+           'Softdeletable' => ['field' => 'deleted']
+       ];
+  ```
+
+- Added new Behavior `Revisionable` which allows creation of Revisions upon Model::save().
+  If a Model uses this Behavior but disables the `revision` functionality, it will still
+  save a `created` and `updated` timestamp, therefore its usage is a bit more broad than
+  the name might suggest.
+
+  This Behavior can be installed into your Models like this:
+
+  ```php
+       protected $_actsAs = [
+         'Revisionable' => [
+            'timestamps' => true,
+            'revisions' => true,
+            // 'revisions' => function($entity, $options, $behavior){ /* ... */ return true; },
+            'class' => '\radium\models\Revisions',  // has to implement add() and restore()
+            'fields' => [
+                'revision' => 'revision_id',
+                'created' => 'created',
+                'updated' => 'updated',
+            ],
+         ]
+       ];
+  ```
+
 
 ### Changed
 
-- Uses Trait for Scaffold
+- Renamed `Versions` Model to `Revisions`
+- The `BaseModel` has been split into `BaseModel` and `DataModel`. Only `DataModel` are
+  thought to be used as Scaffolded Models.
+- Uses Trait for Scaffold Logic, therefore allows for easier integration of Scaffold
+  into User-land Controllers.
 - Added new layout for scaffolded views, named `scaffold` for easier separation
 
 ### Deprecated

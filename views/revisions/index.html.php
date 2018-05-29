@@ -23,7 +23,7 @@
 <div class="header">
 	<div class="col-md-12">
 		<h3 class="header-title"><?= $this->title(); ?></h3>
-		<p class="header-info">Versions are backups of objects that has been saved earlier.</p>
+		<p class="header-info">Revisions are backups of other objects that have been saved earlier.</p>
 	</div>
 </div>
 

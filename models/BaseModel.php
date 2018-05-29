@@ -35,352 +35,14 @@ use lithium\util\Inflector;
  */
 class BaseModel extends \lithium\data\Model {
 
-	/**
-	 * Custom status options
-	 *
-	 * @var array
-	 */
-	public static $_status = array(
-		'active' => 'active',
-		'inactive' => 'inactive',
-	);
+	use \radium\models\Base;
 
 	/**
-	 * Custom type options
-	 *
-	 * @var array
-	 */
-	public static $_types = array(
-		'default' => 'default',
-	);
-
-	/**
-	 * Custom actions available on this object
-	 *
-	 * @var array
-	 */
-	protected static $_actions = array(
-		'first' => array(
-			'delete' => array('icon' => 'remove', 'class' => 'hover-danger', 'data-confirm' => 'Do you really want to delete this record?'),
-			'export' => array('icon' => 'download'),
-			'duplicate' => array('name' => 'clone', 'icon' => 'copy', 'class' => 'hover-primary'),
-			'edit' => array('icon' => 'pencil2', 'class' => 'primary'),
-		),
-		'all' => array(
-			'import' => array('icon' => 'upload'),
-			'export' => array('icon' => 'download'),
-			'add' => array('name' => 'create', 'icon' => 'plus', 'class' => 'primary'),
-		)
-	);
-
-	/**
-	 * Stores the minimum data schema.
-	 *
-	 * @see lithium\data\source\MongoDb::$_schema
-	 * @var array
-	 */
-	protected $_schema = array(
-		'_id' => array('type' => 'id'),
-		'config_id' => array('type' => 'configuration', 'null' => true),
-		'name' => array('type' => 'string', 'default' => '', 'null' => false),
-		'slug' => array('type' => 'string', 'default' => '', 'null' => false),
-		'type' => array('type' => 'string', 'default' => 'default'),
-		'status' => array('type' => 'string', 'default' => 'active', 'null' => false),
-		'notes' => array('type' => 'string', 'default' => '', 'null' => false),
-		'created' => array('type' => 'datetime', 'default' => '', 'null' => false),
-		'updated' => array('type' => 'datetime'),
-		'deleted' => array('type' => 'datetime'),
-	);
-
-	/**
-	 * Criteria for data validation.
-	 *
-	 * @see lithium\data\Model::$validates
-	 * @see lithium\util\Validator::check()
-	 * @var array
-	 */
-	public $validates = array(
-		'_id' => array(
-			array('notEmpty', 'message' => 'a unique _id is required.', 'last' => true, 'on' => 'update'),
-		),
-		'name' => array(
-			array('notEmpty', 'message' => 'a name is required.', 'last' => true),
-		),
-		'slug' => array(
-			array('notEmpty', 'message' => 'an alphanumeric slug is required.', 'last' => true),
-			array('slug', 'message' => 'only numbers, small letters and . - _ are allowed.', 'last' => true),
-		),
-		'type' => array(
-			array('notEmpty', 'message' => 'Please specify a type'),
-			array('type', 'message' => 'Type is unknown. Please adjust.'),
-		),
-		'status' => array(
-			array('notEmpty', 'message' => 'Please specify a status'),
-			array('status', 'message' => 'Status is unknown. Please adjust.'),
-		),
-	);
-
-	/**
-	 * If this contains an array, the containing fields ar rendered as tabs in add/edit forms.
-	 *
-	 * 	$_renderLayout = array(
-	 * 		'Tab1' => array(
-	 * 			'field1',
-	 * 			'field2',
-	 * 			'field3'
-	 * 		),
-	 *		'Tab2' => array(
-	 *			'field4',
-	 * 			'field5'
-	 *		),
-	 * 	);
-	 *
-	 * @var array
-	 */
-	public static $_renderLayout = array();
-
-	/**
-	 * Custom find query properties, indexed by name.
-	 *
-	 * @var array
-	 */
-	public $_finders = array(
-		'deleted' => array(
-			'conditions' => array(
-				'deleted' => array('>=' => 1),
-			)
-		)
-	);
-
-	/**
-	 * Default query parameters.
-	 *
-	 * @var array
-	 */
-	protected $_query = array(
-		'order' => array(
-			'slug' => 'ASC',
-			'name' => 'ASC',
-			'updated' => 'DESC',
-			'created' => 'DESC',
-		),
-		'conditions' => array(
-			'deleted' => null,
-		),
-	);
-
-
-	/**
-	 * Specifies all meta-information for this model class,
-	 * overwritten to enable versions by default.
-	 *
-	 * @see lithium\data\Connections::add()
-	 * @var array
-	 */
-	protected $_meta = array(
-		'versions' => true,
-		'neon' => false,
-	);
-
-	protected static $_rss = array(
-		'title' => 'name',
-		'description' => 'notes',
-		'link' => 'http://{:host}/{:controller}/view/{:_id}',
-		'guid' => '{:controller}/view/{:_id}',
-	);
-
-	/**
-	 * overwritten to allow for soft-deleting a record
-	 *
-	 * The schema of the relevant model needs a field defined in schema called `deleted`.
-	 * As soon as this is the case, the record does not get deleted right away but instead
-	 * marked for deletion, i.e. setting a timestamp into the `deleted` field. Unless you make
-	 * use of the `force` option, then the record will get deleted without further ado.
-	 *
-	 * @param object $entity current instance
-	 * @param array $options Possible options are:
-	 *     - `force`: set to true to delete record, anyway
-	 * @return boolean true on success, false otherwise
-	 */
-	public function delete($entity, array $options = array()) {
-		$options += array('force' => false);
-		$deleted = $entity->schema('deleted');
-		// TODO: use $deleted = $entity->hasField('deleted');
-		if (is_null($deleted) || $options['force']) {
-			unset($options['force']);
-			$result = parent::delete($entity, $options);
-			$versions = static::meta('versions');
-			if (($versions === true) || (is_callable($versions) && $versions($entity, $options))) {
-				if ($entity->version_id) {
-					$key = Versions::key();
-					$conditions = array($key => $entity->version_id);
-					Versions::update(array('status' => 'deleted'), $conditions);
-				}
-			}
-			return $result;
-		}
-		$entity->deleted = time();
-		return $entity->save();
-	}
-
-	/**
-	 * automatically adds timestamps on saving.
-	 *
-	 * In case of creation it correctly fills the `created` field with a unix timestamp.
-	 * Same holds true for `updated` on updates, accordingly.
-	 *
-	 * @see lithium\data\Model
-	 * @param object $entity current instance
-	 * @param array $data Any data that should be assigned to the record before it is saved.
-	 * @param array $options additional options
-	 * @return boolean true on success, false otherwise
-	 * @filter
-	 */
-	public function save($entity, $data = array(), array $options = array()) {
-		if (!empty($data)) {
-			$entity->set($data);
-		}
-		$schema = $entity->schema();
-		foreach ($schema->fields() as $name => $meta) {
-			if (isset($meta['type']) && $meta['type'] !== 'list') {
-				continue;
-			}
-			if(is_string($entity->$name)) {
-				$listData = explode("\n", $entity->$name);
-				array_walk($listData, function (&$val) { $val = trim($val); });
-				$entity->$name = $listData;
-			}
-		}
-		$versions = static::meta('versions');
-		if (!isset($options['callbacks']) || $options['callbacks'] !== false) {
-			$field = ($entity->exists()) ? 'updated' : 'created';
-			$entity->set(array($field => time()));
-			if (($versions === true) || (is_callable($versions) && $versions($entity, $options))) {
-				$version_id = Versions::add($entity, $options);
-				if ($version_id) {
-					$entity->set(compact('version_id'));
-				}
-			}
-		}
-		$result = parent::save($entity, null, $options);
-		if ($result && isset($field) && $field == 'created') {
-			if (($versions === true) || (is_callable($versions) && $versions($entity, $options))) {
-				$version_id = Versions::add($entity, array('force' => true));
-				if ($version_id) {
-					$entity->set(compact('version_id'));
-					return $entity->save(null, array('callbacks' => false));
-				}
-			}
-		}
-		return $result;
-	}
-
-	/**
-	 * returns primary id as string from current entity
-	 *
-	 * @param object $entity instance of current Record
-	 * @return string primary id of current record
-	 */
-	public function id($entity) {
-		return (string) $entity->{static::key()};
-	}
-
-	/**
-	 * generic method to retrieve a list or an entry of an array of a static property or a
-	 * configuration with given properties list
-	 *
-	 * This method is used to allow an easy addition of key/value pairs, mainly for usage
-	 * in a dropdown for a specific model.
-	 *
-	 * If you want to provide a list of available options, declare your properties in the same
-	 * manner as `$_types` or `$_status` or create a new configuration with a slug that follows
-	 * this structure: `{static::meta('sources')}.$property` (e.g. `content.types`).
-	 * This array is used, then.
-	 *
-	 * @see radium\models\BaseModel::types()
-	 * @see radium\models\BaseModel::status()
-	 * @param string $property name of property to look for.
-	 *               automatically prepended by an underscore: `_`. Must be static and public
-	 * @param string $type type to look for, optional
-	 * @return mixed all types with keys and their name, or value of `$type` if given
-	 */
-	public static function _group($property, $type = null) {
-		$field = sprintf('_%s', $property);
-		$slug = sprintf('%s.%s', static::meta('source'), $property);
-		if (!empty($type)) {
-			$var =& static::$$field;
-			$default = (isset($var[$type])) ? $var[$type] : false;
-		} else {
-			$default = static::$$field;
-		}
-		return Configurations::get($slug, $default, array('field' => $type));
-	}
-
-	/**
-	 * all types for current model
-	 *
-	 * @param string $type type to look for
-	 * @return mixed all types with keys and their name, or value of `$type` if given
-	 */
-	public static function types($type = null) {
-		return static::_group(__FUNCTION__, $type);
-	}
-
-	/**
-	 * render layout for current model
-	 *
-	 * @param string $name ...
-	 * @return mixed renderLayouts with keys and their name, or value of `$name` if given
-	 */
-	public static function renderLayout($name = null) {
-		return static::_group(__FUNCTION__, $name);
-	}
-
-	/**
-	 * all status for current model
-	 *
-	 * @param string $status status to look for
-	 * @return mixed all status with keys and their name, or value of `$status` if given
-	 */
-	public static function status($status = null) {
-		return static::_group(__FUNCTION__, $status);
-	}
-
-	/**
-	 * all actions available for current model
-	 *
-	 * @see radium\extensions\helper\Scaffold::actions()
-	 * @param string $type type to look for, i.e. `first` or `all`
-	 * @return mixed all actions with their corresponding configuration, suitable for Scaffold->actions()
-	 */
-	public static function actions($type = null) {
-		return static::_group(__FUNCTION__, $type);
-	}
-
-	/**
-	 * finds and loads entities that match slug subpattern
-	 *
-	 * @see lithium\data\Model::find()
-	 * @param string $slug short unique string to look for
-	 * @param string $status status must have
-	 * @param array $options additional options to be merged into find options
-	 * @return object|boolean found results as collection or false, if none found
-	 * @filter
-	 */
-	public static function search($slug, $status = 'active', array $options = array()) {
-		$params = compact('slug', 'status', 'options');
-		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
-			extract($params);
-			$options['conditions'] = array(
-				'slug' => array('like' => "/$slug/i"),
-				'status' => $status,
-				'deleted' => null, // only not deleted
-			);
-			return static::find('all', $options);
-		});
-	}
-
-	/**
+	 * 
+	 * TODO: Behavior!!
+	 * 
+	 * 
+	 * 
 	 * allows for data-retrieval of entities via file-based access
 	 *
 	 * In case you want to provide default file-data without inserting them into the database, you
@@ -405,68 +67,13 @@ class BaseModel extends \lithium\data\Model {
 	 *        - `page`: For pagination of data.
 	 * @return mixed
 	 */
-	public static function find($type, array $options = array()) {
+	public static function find($type, array $options = []) {
 		$result = parent::find($type, $options);
 		$neon = static::meta('neon');
 		if ($neon && (!$result || (!count($result)))) {
 			return Neon::find(get_called_class(), $type, $options);
 		}
 		return $result;
-	}
-
-	/**
-	 * finds and loads active entity for given id
-	 *
-	 * @param string $id id of entity to load
-	 * @param string|array $status expected status of record, can be string or an array of strings
-	 * @param array $options additional Options to be used for the query
-	 *        - `key`: the field to use for lookup, if given `id` is not a valid mongo-id
-	 *                   defaults to `slug`
-	 * @return object|boolean entity if found and active, false otherwise
-	 * @filter
-	 */
-	public static function load($id, $status = 'active', array $options = array()) {
-		$params = compact('id', 'status', 'options');
-		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
-			extract($params);
-			$defaults = array('key' => 'slug');
-			$options += $defaults;
-
-			$key = ((strlen($id) == 24) && (ctype_xdigit($id)))
-				? $self::key()
-				: $options['key'];
-
-			$options['conditions'] = ($key == $options['key'])
-				? array($key => $id, 'status' => $status, 'deleted' => null)
-				: array($key => $id);
-
-			$options['order'] = ($key == $options['key'])
-				? array('updated' => 'DESC')
-				: null;
-
-			unset($options['key']);
-			$result = static::find('first', $options);
-			if (!$result) {
-				return false;
-			}
-			if (!in_array($result->status, (array) $status)) {
-				return false;
-			}
-			if (!empty($result->deleted)) {
-				return false;
-			}
-			return $result;
-		});
-	}
-
-	/**
-	 * Returns all schema-fields, without their types
-	 *
-	 * @return array
-	 */
-	public static function fields() {
-		$schema = static::schema();
-		return $schema->names();
 	}
 
 	/**
@@ -482,24 +89,24 @@ class BaseModel extends \lithium\data\Model {
 	 *        - `callbacks`: enable callbacks in save-method, defaults to false
 	 * @return array
 	 */
-	public static function bulkImport($data, array $options = array()) {
-		$defaults = array(
+	public static function bulkImport($data, array $options = []) {
+		$defaults = [
 			'dry' => false,
 			'prune' => false,
 			'overwrite' => true,
 			'validate' => true,
 			'strict' => true,
 			'callbacks' => false,
-		);
+		];
 		$options += $defaults;
-		$result = array();
+		$result = [];
 
 		if ($options['prune'] && !$options['dry']) {
 			static::remove();
 		}
 
 		if (!$options['overwrite']) {
-			$conditions = array('_id' => array_keys($data));
+			$conditions = ['_id' => array_keys($data)];
 			$fields = '_id';
 			$present = static::find('all', compact('conditions', 'fields'));
 
@@ -510,7 +117,7 @@ class BaseModel extends \lithium\data\Model {
 			}
 		}
 		if ($options['overwrite'] && !$options['dry']) {
-			static::remove(array('_id' => array_keys($data)));
+			static::remove(['_id' => array_keys($data)]);
 		}
 
 		$callbacks = $options['callbacks'];
@@ -528,7 +135,7 @@ class BaseModel extends \lithium\data\Model {
 			}
 			if (!$options['dry']) {
 				if ($options['overwrite']) {
-					static::remove(array('_id' => $key));
+					static::remove(['_id' => $key]);
 				}
 				$result[$key] = ($entity->save(null, compact('whitelist', 'callbacks')))
 					? 'saved'
@@ -558,20 +165,20 @@ class BaseModel extends \lithium\data\Model {
 	 * @return array an array containing all results
 	 * @filter
 	 */
-	public static function multiUpdate($field, array $data, array $options = array()) {
-		$defaults = array('updated' => true);
+	public static function multiUpdate($field, array $data, array $options = []) {
+		$defaults = ['updated' => true];
 		$options += $defaults;
 		$params = compact('field', 'data', 'options');
 		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			extract($params);
 			$key = static::key();
-			$result = array();
+			$result = [];
 			foreach ($data as $id => $value) {
-				$update = array($field => $value);
+				$update = [$field => $value];
 				if ($options['updated']) {
 					$update['updated'] = time();
 				}
-				$result[$id] = static::update($update, array($key => $id));
+				$result[$id] = static::update($update, [$key => $id]);
 			}
 			return $result;
 		});
@@ -590,14 +197,14 @@ class BaseModel extends \lithium\data\Model {
 	 * @return true on success, false otherwise
 	 * @filter
 	 */
-	public function updateFields($entity, array $values, array $options = array()) {
-		$defaults = array('updated' => true);
+	public function updateFields($entity, array $values, array $options = []) {
+		$defaults = ['updated' => true];
 		$options += $defaults;
 		$params = compact('entity', 'values', 'options');
 		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			extract($params);
 			$key = static::key();
-			$conditions = array($key => $entity->id());
+			$conditions = [$key => $entity->id()];
 			if ($options['updated']) {
 				$values['updated'] = time();
 			}
@@ -611,27 +218,6 @@ class BaseModel extends \lithium\data\Model {
 			$entity->set($values);
 			return true;
 		});
-	}
-
-	/**
-	 * returns if current record is marked as deleted
-	 *
-	 * @param object $entity current instance
-	 * @return boolean true if record is deleted, false otherwise
-	 */
-	public function deleted($entity) {
-		return (bool) is_null($entity->deleted);
-	}
-
-	/**
-	 * undeletes a record, in case it was marked as deleted
-	 *
-	 * @param object $entity current instance
-	 * @return boolean true on success, false otherwise
-	 */
-	public function undelete($entity) {
-		unset($entity->deleted);
-		return is_null($entity->deleted) && $entity->save();
 	}
 
 	/**
@@ -649,8 +235,8 @@ class BaseModel extends \lithium\data\Model {
 	 *              - `flat`    : to flatten the result, if object/array-ish, defaults to false
 	 * @return mixed configuration value
 	 */
-	public function configuration($entity, $field = null, array $options = array()) {
-		$defaults = array('raw' => false);
+	public function configuration($entity, $field = null, array $options = []) {
+		$defaults = ['raw' => false];
 		$options += $defaults;
 		$load = (empty($entity->config_id))
 			? sprintf('%s.%s', strtolower(static::meta('name')), $entity->slug)
@@ -679,7 +265,7 @@ class BaseModel extends \lithium\data\Model {
 	 *                 version of the model to reslove.
 	 * @return array foreign object data
 	 */
-	public function resolve($entity, $fields = null, array $options = array()) {
+	public function resolve($entity, $fields = null, array $options = []) {
 		$resolver = function($name) {
 			$modelname = Inflector::pluralize(Inflector::classify($name));
 			return Libraries::locate('models', $modelname);
@@ -690,12 +276,12 @@ class BaseModel extends \lithium\data\Model {
 
 		switch (true) {
 			case is_string($fields) && $options['slug']:
-				$fields = array($fields);
+				$fields = [$fields];
 				break;
 			case is_array($fields) && $options['slug']:
 				break;
 			case is_string($fields):
-				$fields = array((stristr($fields, '_id')) ? $fields : "{$fields}_id");
+				$fields = [(stristr($fields, '_id')) ? $fields : "{$fields}_id"];
 				break;
 			case is_array($fields):
 				$fields = array_map(function($field){
@@ -707,7 +293,7 @@ class BaseModel extends \lithium\data\Model {
 				break;
 		}
 
-		$result = array();
+		$result = [];
 		foreach ($fields as $field) {
 			if (!$options['slug']) {
 				if (!preg_match('/^(.+)_id$/', $field, $matches)) {
@@ -732,47 +318,6 @@ class BaseModel extends \lithium\data\Model {
 	}
 
 	/**
-	 * returns a properly processed item as rss-item
-	 *
-	 * @param object $entity instance of current Record
-	 * @param array $fields an array of additional fields to generate
-	 * @param array $options an array of additional options
-	 *              - `merge`: set to false, to process only given fields
-	 * @return array an array containing relevant rss data as keys and their corresponding values
-	 */
-	public function rssItem($entity, $fields = array(), array $options = array()) {
-		$defaults = array('merge' => true);
-		$options += $defaults;
-		static::$_rss['pubDate'] = function($object) {
-			return date('D, d M Y g:i:s O', $object->created->sec);
-		};
-		$fields = ($options['merge']) ? array_merge(static::$_rss, $fields) : $fields;
-
-		$item = array();
-		foreach ($fields as $field => $source) {
-			switch(true) {
-				case is_callable($source):
-					$item[$field] = $source($entity);
-					break;
-				case stristr($source, '{:'):
-					$replace = array_merge(
-						Environment::get('scaffold'),
-						Set::flatten($entity->data()),
-						array(
-							'host' => $_SERVER['HTTP_HOST'],
-						)
-					);
-					$item[$field] = Text::insert($source, $replace);
-					break;
-				case isset($entity->$source):
-					$item[$field] = $entity->$source;
-					break;
-			}
-		}
-		return $item;
-	}
-
-	/**
 	 * return entity data, filtered by top-level keys
 	 *
 	 * return only subset of data, that is requested, as in $keys or as fallback taken from
@@ -783,7 +328,7 @@ class BaseModel extends \lithium\data\Model {
 	 * @param string $key an array with all keys to be preserved, everything else is removed
 	 * @return array only data, that is left after filtering everything, that is not in $keys
 	 */
-	public function publicData($entity, $keys = array()) {
+	public function publicData($entity, $keys = []) {
 		$keys = (empty($keys) && isset(static::$_publicFields))
 			? static::$_publicFields
 			: (array) $keys;
@@ -807,10 +352,10 @@ class BaseModel extends \lithium\data\Model {
 	 *              - `reduce`: reduce method to be used within mongodb, must be of type `MongoCode`
 	 * @return array an array containing relevant rss data as keys and their corresponding values
 	 */
-	public static function distinctCount($field = 'type', $options = array()) {
-		$defaults = array(
+	public static function distinctCount($field = 'type', $options = []) {
+		$defaults = [
 			'group' => $field,
-			'fields' => array('_id', $field),
+			'fields' => ['_id', $field],
 			'initial' => new \stdClass,
 			'reduce' => new \MongoCode(
 				"function(doc, prev) { ".
@@ -820,13 +365,13 @@ class BaseModel extends \lithium\data\Model {
 					"prev[doc.$field] += 1;".
 				"}"
 			),
-		);
+		];
 		$options += $defaults;
 
 		$method = Inflector::pluralize($field);
 		$result = (method_exists(__CLASS__, $method))
 			? array_fill_keys(array_keys(static::$method()), 0)
-			: array();
+			: [];
 
 		$res = static::find('all', $options);
 		if (!$res) {
@@ -855,11 +400,11 @@ class BaseModel extends \lithium\data\Model {
 		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			extract($params);
 			if (empty($entity->$field)) {
-				return array();
+				return [];
 			}
 			$data = IniFormat::parse($entity->$field);
 			if (!is_array($data)) {
-				return array();
+				return [];
 			}
 			return $data;
 		});
@@ -875,9 +420,9 @@ class BaseModel extends \lithium\data\Model {
 		$_query = $self->_query;
 
 		$default = parent::_findFilters();
-		$custom = array(
+		$custom = [
 			'list' => function($self, $params, $chain) {
-				$result = array();
+				$result = [];
 				$meta = $self::meta();
 				$name = $meta['key'];
 
@@ -886,7 +431,7 @@ class BaseModel extends \lithium\data\Model {
 					$options['fields'] = (array) $options['field'];
 				}
 				if ($options['fields'] === null || empty($options['fields'])) {
-					list($name, $value) = array($self::meta('key'), null);
+					list($name, $value) = [$self::meta('key'), null];
 				} elseif (count($options['fields']) > 2) {
 					list($name, $value) = array_slice($options['fields'], 0, 2);
 				} elseif (count($options['fields']) > 1) {
@@ -912,7 +457,7 @@ class BaseModel extends \lithium\data\Model {
 				$params['options']['offset'] = $offset;
 				return $self::find('first', $params['options']);
 			}
-		);
+		];
 		return array_merge($default, $custom);
 	}
 

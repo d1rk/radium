@@ -8,9 +8,9 @@
 
 namespace radium\controllers;
 
-class VersionsController extends \radium\controllers\ScaffoldController {
+class RevisionsController extends \radium\controllers\ScaffoldController {
 
-	public $model = 'radium\models\Versions';
+	public $model = 'radium\models\Revisions';
 
 	// @todo: add filter for additional id per model given
 	public function available() {

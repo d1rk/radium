@@ -13,7 +13,7 @@ use radium\data\Converter;
 use lithium\util\Set;
 use Exception;
 
-class Configurations extends \radium\models\BaseModel {
+class Configurations extends \radium\models\DataModel {
 
 	/**
 	 * Custom type options

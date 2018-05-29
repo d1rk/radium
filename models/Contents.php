@@ -10,7 +10,14 @@ namespace radium\models;
 
 use radium\data\Converter;
 
-class Contents extends \radium\models\BaseModel {
+class Contents extends \radium\models\DataModel {
+
+	use \li3_behaviors\data\model\Behaviors;
+
+	protected $_actsAs = [
+		'Revisionable',
+		'Softdeletable',
+	];
 
 	/**
 	 * Custom type options

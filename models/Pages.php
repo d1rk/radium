@@ -10,7 +10,7 @@ namespace radium\models;
 
 use radium\data\Converter;
 
-class Pages extends \radium\models\BaseModel {
+class Pages extends \radium\models\DataModel {
 
 	/**
 	 * Custom status options
