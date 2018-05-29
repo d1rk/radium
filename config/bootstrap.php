@@ -8,6 +8,21 @@
 
 define('RADIUM_PATH', dirname(__DIR__));
 
+use lithium\core\Libraries;
+use Handlebars\Autoloader;
+
+if (!Libraries::get('li3_behaviors')) Libraries::add('li3_behaviors');
+
+Libraries::add('Parsedown', [
+	'path' => RADIUM_PATH . '/libraries/Parsedown',
+	'includePath' => true,
+	'prefix' => false,
+]);
+
+require RADIUM_PATH . '/libraries/Handlebars/Autoloader.php';
+Autoloader::register();
+
+
 require __DIR__ . '/bootstrap/media.php';
 require __DIR__ . '/bootstrap/validators.php';
 

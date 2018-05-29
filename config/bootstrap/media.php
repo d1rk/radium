@@ -13,7 +13,6 @@ use lithium\core\Environment;
 use lithium\net\http\Media;
 use lithium\util\Set;
 use lithium\util\Text;
-use Handlebars\Autoloader;
 
 Media::type('default', null, array(
 	'view' => 'lithium\template\View',
@@ -81,17 +80,6 @@ Media::type('csv', 'application/csv', array('encode' => function($data) {
 	header(sprintf('Content-Disposition: attachment; filename="%s"', $name));
 	return ob_get_clean();
 }));
-
-// Libraries::add('Handlebars', array(
-//     // "prefix" => "Handlebars_",
-//     // "includePath" => LITHIUM_LIBRARY_PATH, // or LITHIUM_APP_PATH . '/libraries'
-//     // "bootstrap" => "Loader/Autoloader.php",
-//     // "loader" => array("Handlebars", "register"),
-//     // "transform" => function($class) { return str_replace("_", "/", $class) . ".php"; }
-// ));
-
-require RADIUM_PATH . '/libraries/Handlebars/Autoloader.php';
-Autoloader::register();
 
 /*
  * this filter allows automatic linking and loading of assets from `webroot` folder

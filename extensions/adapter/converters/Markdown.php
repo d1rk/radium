@@ -9,6 +9,8 @@
 namespace radium\extensions\adapter\converters;
 
 use lithium\aop\Filters;
+use Parsedown;
+use ParsedownExtra as Renderer;
 
 class Markdown extends \lithium\core\Object {
 
@@ -22,12 +24,15 @@ class Markdown extends \lithium\core\Object {
 	 * @filter
 	 */
 	public function get($content, $data = array(), array $options = array()) {
-		$defaults = array('allowed' => true);
+		$defaults = array('safe' => true);
 		$options += $defaults;
 		$params = compact('content', 'data', 'options');
 		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
-			// TODO: parse with markdown parser
-			return $params['content'];
+			$renderer = new Renderer;
+			if ($params['options']['safe']) {
+				$renderer->setSafeMode(true);
+			}
+			return $renderer->text($params['content']);
 		});
 	}
 
