@@ -88,6 +88,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   ```
 
 - Added Parsedown as library, therefore implementing the Markdown Converter.
+- Added more DataObject information in scaffod-views, i.e. `status`, `type` as well
+  as `created` and `updated` information to default views.
 
 ### Changed
 

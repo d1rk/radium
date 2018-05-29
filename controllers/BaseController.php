@@ -99,33 +99,6 @@ class BaseController extends \lithium\action\Controller {
 	}
 
 	/**
-	 * Generates options out of named params
-	 *
-	 * @param string $defaults all default options you want to have set
-	 * @return array merged array with all $defaults, $options and named params
-	 */
-	protected function _options($defaults = array()) {
-		$options = array();
-		if (!empty($this->request->args)) {
-			foreach ($this->request->args as $param) {
-				if (stristr($param, ':')) {
-					list($key, $val) = explode(':', $param, 2);
-				} else {
-					$key = $param;
-					$val = true;
-				}
-				$options[$key] = (is_numeric($val)) ? (int)$val : $val;
-			}
-		}
-		if (!empty($this->request->query)) {
-			$options += $this->request->query;
-			unset($options['url']);
-		}
-		$options = array_merge($defaults, $options);
-		return $options;
-	}
-
-	/**
 	 * allows ajaxified upload of files
 	 *
 	 * @see

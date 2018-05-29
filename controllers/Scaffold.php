@@ -1,4 +1,10 @@
 <?php
+/**
+ * radium: lithium application framework
+ *
+ * @copyright     Copyright 2017, Dirk Brünsicke (http://bruensicke.com)
+ * @license       http://opensource.org/licenses/BSD-3-Clause The BSD License
+ */
 
 namespace radium\controllers;
 
@@ -64,7 +70,8 @@ trait Scaffold {
 		$objects = $model::find('all', compact('conditions'));
 		$count = (int) $model::find('count', compact('conditions'));
 		$all = (int) $model::find('count');
-		return compact('objects', 'types', 'count', 'all');
+
+		return compact('objects', 'count', 'all');
 	}
 
 	public function view($id = null) {
@@ -309,7 +316,34 @@ trait Scaffold {
 		return ['error' => 'content not valid.'];
 	}
 
-  /**
+	/**
+	 * Generates options out of named params
+	 *
+	 * @param string $defaults all default options you want to have set
+	 * @return array merged array with all $defaults, $options and named params
+	 */
+	protected function _options($defaults = array()) {
+		$options = array();
+		if (!empty($this->request->args)) {
+			foreach ($this->request->args as $param) {
+				if (stristr($param, ':')) {
+					list($key, $val) = explode(':', $param, 2);
+				} else {
+					$key = $param;
+					$val = true;
+				}
+				$options[$key] = (is_numeric($val)) ? (int)$val : $val;
+			}
+		}
+		if (!empty($this->request->query)) {
+			$options += $this->request->query;
+			unset($options['url']);
+		}
+		$options = array_merge($defaults, $options);
+		return $options;
+	}
+
+	/**
 	 * Generates different variations of the configured $this->model property name
 	 *
 	 * If no model is configured (i.e. `null`) - it automatically detects the corresponding

@@ -4,7 +4,7 @@
 	<?= $this->_render('element', 'radium/head'); ?>
 </head>
 <body class="cover">
-	<div class="wrapper">
+	<div class="wrapper scaffold">
 		<div class="body">
 			<?= $this->_render('element', 'radium/sidebar'); ?>
 			<section class="content">

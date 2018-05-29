@@ -2,8 +2,8 @@
 <div class="alert alert-warning">
 	<button type="button" class="close" data-dismiss="alert" aria-hidden="true">x</button>
 
-	<h4><i class="fa fa-warning2"></i> Warning</h4>
-	<p>Some errors occured, you should double-check your inputs</p>
+	<h4><i class="fa fa-warning2"></i> Attention</h4>
+	<p>Some errors occured, you should double-check your input</p>
 	<dl class="dl-intended">
 		<?php
 			foreach ($errors as $field => $_errors) {

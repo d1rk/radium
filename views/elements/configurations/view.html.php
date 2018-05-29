@@ -1,3 +1,5 @@
+<?= $this->scaffold->render('meta', ['data' => $this->scaffold->object->data()]); ?>
+<hr />
 <?php
 $configuration = $this->scaffold->object;
 switch($configuration->type) {

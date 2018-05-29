@@ -19,9 +19,6 @@
 	</li>
 	<li class="active">
 		<?= $this->title($this->scaffold->object->title()); ?>
-		<?php if (isset($this->scaffold->object->status)): ?>
-			<span class="label label-<?= $this->scaffold->object->status ?>"><?= $this->scaffold->object->status ?></span>
-		<?php endif; ?>
 	</li>
 </ol>
 
@@ -30,7 +27,7 @@
 <div class="header">
 	<div class="col-md-12">
 		<h3 class="header-title"><?= $this->title(); ?></h3>
-		<?php if (!empty($this->scaffold->object->notes)): ?>
+		<?php if ($this->scaffold->object->notes): ?>
 			<p class="header-info">
 				<?= $this->scaffold->object->notes ?>
 			</p>
