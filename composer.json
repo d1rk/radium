@@ -16,7 +16,7 @@
 	},
 	"require": {
 		"composer/installers": "1.*",
-        "unionofrad/li3_behaviors": "^2.0"
+        "unionofrad/li3_behaviors": "^2.0",
 		"nette/neon": "^2.4"
 	}
 }
