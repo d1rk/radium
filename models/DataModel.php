@@ -18,7 +18,6 @@ use lithium\core\Libraries;
 use lithium\core\Environment;
 use lithium\util\Set;
 use lithium\util\Text;
-use lithium\util\Validator;
 use lithium\util\Inflector;
 
 /**
@@ -112,12 +111,12 @@ class DataModel extends \radium\models\BaseModel {
 			['slug', 'message' => 'only numbers, small letters and . - _ are allowed.', 'last' => true],
 		],
 		'type' => [
-			['notEmpty', 'message' => 'Please specify a type'],
-			['type', 'message' => 'Type is unknown. Please adjust.'],
+			['notEmpty', 'message' => 'Please specify a type', 'last' => true],
+			['type', 'message' => 'Type is unknown. Please adjust.', 'last' => true],
 		],
 		'status' => [
-			['notEmpty', 'message' => 'Please specify a status'],
-			['status', 'message' => 'Status is unknown. Please adjust.'],
+			['notEmpty', 'message' => 'Please specify a status', 'last' => true],
+			['status', 'message' => 'Status is unknown. Please adjust.', 'last' => true],
 		],
 	];
 
@@ -248,16 +247,6 @@ class DataModel extends \radium\models\BaseModel {
 	}
 
 	/**
-	 * all types for current model
-	 *
-	 * @param string $type type to look for
-	 * @return mixed all types with keys and their name, or value of `$type` if given
-	 */
-	public static function types($type = null) {
-		return static::_group(__FUNCTION__, $type);
-	}
-
-	/**
 	 * render layout for current model
 	 *
 	 * @param string $name ...
@@ -265,6 +254,16 @@ class DataModel extends \radium\models\BaseModel {
 	 */
 	public static function renderLayout($name = null) {
 		return static::_group(__FUNCTION__, $name);
+	}
+
+	/**
+	 * all types for current model
+	 *
+	 * @param string $type type to look for
+	 * @return mixed all types with keys and their name, or value of `$type` if given
+	 */
+	public static function types($type = null) {
+		return static::_group(__FUNCTION__, $type);
 	}
 
 	/**
