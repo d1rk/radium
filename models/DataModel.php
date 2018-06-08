@@ -68,8 +68,9 @@ class DataModel extends \radium\models\BaseModel {
 			'edit' => ['icon' => 'pencil2', 'class' => 'primary'],
 		],
 		'all' => [
-			'import' => ['icon' => 'upload'],
 			'export' => ['icon' => 'download'],
+			'import' => ['icon' => 'upload'],
+			'schema' => ['icon' => 'th-list'],
 			'add' => ['name' => 'create', 'icon' => 'plus', 'class' => 'primary'],
 		]
 	];

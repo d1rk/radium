@@ -20,8 +20,8 @@
 <div class="main-content">
 <?php
     foreach($models as $model) {
-        $schema = (is_callable(array($model, 'schema'))) ? $model::schema() : array(); 
-        $fields = ($schema) ? $schema->fields() : array();
+        $schema = (is_callable([$model, 'schema'])) ? $model::schema() : []; 
+        $fields = ($schema) ? $schema->fields() : [];
         ksort($fields);
         echo $this->Handlebars->render('radium/schema', compact('model', 'fields'));
     }

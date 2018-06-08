@@ -98,6 +98,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   ]
   ```
 
+- Added new method on Scaffolded Controllers, named `schema` which displays a comprehensible list
+  of fields and other useful information about all fields of a model Schema definition.
 - Added Parsedown as library, therefore implementing the Markdown Converter.
 - Added more DataObject information in scaffolded-views, i.e. `status`, `type` as well
   as `created` and `updated` information to default views.

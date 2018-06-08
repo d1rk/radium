@@ -14,8 +14,11 @@
 			<?= $this->html->link('radium', '/radium');?>
 		</li>
 	<?php endif; ?>
+	<li>
+		<?= $this->html->link($this->scaffold->human, array('action' => 'index'));?>
+	</li>
 	<li class="active">
-		<?= $this->title($this->scaffold->human); ?>
+		<?= $this->title(sprintf('%s Import', $this->scaffold->human)); ?>
 	</li>
 </ol>
 

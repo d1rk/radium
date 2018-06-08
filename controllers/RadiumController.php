@@ -31,11 +31,11 @@ class RadiumController extends \radium\controllers\BaseController {
 	}
 
 	public function import() {
-		Libraries::paths(array(
-			'neons' => array('{:library}\data\{:class}\{:name}.neon'),
-		));
+		Libraries::paths([
+			'neons' => ['{:library}\data\{:class}\{:name}.neon'],
+		]);
 		$libraries = Libraries::get(null, 'name');
-		$data = array();
+		$data = [];
 		$namespaces = true;
 		foreach ($libraries as $library) {
 			$files = Libraries::locate('neons', null, compact('namespaces', 'library'));
@@ -61,7 +61,7 @@ class RadiumController extends \radium\controllers\BaseController {
 		$connections = new Collection(compact('data'));
 		if (true || $this->request->is('json')) {
 			$connections->each(function($name) {
-				$config = Connections::get($name, array('config' => true));
+				$config = Connections::get($name, ['config' => true]);
 				unset($config['object']);
 				return array_merge(compact('name'), Set::flatten($config));
 			});
@@ -79,8 +79,8 @@ class RadiumController extends \radium\controllers\BaseController {
 		$models = new Collection(compact('data'));
 		if ($this->request->is('json')) {
 			$models->each(function($model) {
-				$schema = (is_callable(array($model, 'schema'))) ? $model::schema() : array();
-				return array($model => ($schema) ? $schema->fields() : array());
+				$schema = (is_callable([$model, 'schema'])) ? $model::schema() : [];
+				return [$model => ($schema) ? $schema->fields() : []];
 			});
 		}
 		return compact('models');

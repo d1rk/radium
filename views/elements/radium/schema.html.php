@@ -3,6 +3,7 @@
 	<colgroup>
 		<col width="200" />
 		<col width="130" />
+		<col width="200" />
 		<col width="*" />
 	</colgroup>
 	<thead>
@@ -10,6 +11,7 @@
 			<th>Name</th>
 			<th>Type</th>
 			<th>Default</th>
+			<th>Annotation</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -17,12 +19,17 @@
 		<tr data-name="{{@key}}">
 			<td class="name">
 				<samp>{{@key}}</samp>
-				{{#if this.null}}<b style="color:red">*</b>{{/if}}
+				{{#if this.required}}<b style="color:red">*</b>{{/if}}
 			</td>
 			<td class="type"><kbd>{{{ this.type }}}</kbd></td>
 			<td class="default">
 				{{#if this.default}}
 					<code>{{ this.default }}</code>
+				{{/if}}
+			</td>
+			<td class="default">
+				{{#if this.annotation}}
+					<small>{{ this.annotation }}</small>
 				{{/if}}
 			</td>
 		</tr>

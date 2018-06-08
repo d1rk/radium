@@ -57,6 +57,13 @@ trait Scaffold {
 		$this->_initScaffold();
 	}
 
+	public function schema() {
+		$model = $this->scaffold['model'];
+		$schema = $model::schema();
+		$fields = $schema->fields();
+		return compact('model', 'schema', 'fields');
+	}
+
 	public function index() {
 		$model = $this->scaffold['model'];
 		$conditions = $this->_options();
