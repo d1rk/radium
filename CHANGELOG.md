@@ -87,8 +87,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
        ];
   ```
 
+- Added new attribute to Models Schema `annotation` which allows easy implementation of additional
+  help-text for a field to be entered. In the scaffolded views, it will be rendered between label
+  and the input-field.
+
+  ```php
+  // in Model class
+  protected $_schema = [
+      'count' => ['type' => 'int', 'annotation' => 'Please enter only numbers.'],
+  ]
+  ```
+
 - Added Parsedown as library, therefore implementing the Markdown Converter.
-- Added more DataObject information in scaffod-views, i.e. `status`, `type` as well
+- Added more DataObject information in scaffolded-views, i.e. `status`, `type` as well
   as `created` and `updated` information to default views.
 
 ### Changed

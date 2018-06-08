@@ -1,0 +1,10 @@
+/* https://getbootstrap.com/docs/3.3/getting-started/ */
+
+label {
+	margin-bottom: 2px;
+}
+
+.help-block.annotation {
+	margin-top: -2px;
+	margin-bottom: 2px;
+}

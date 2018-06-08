@@ -10,12 +10,12 @@ $fields = isset($fields)
 	: $schema->names();
 $skip = isset($skip)
 	? $skip
-	: array();
+	: [];
 $readonly = isset($readonly)
 	? $readonly
-	: array();
+	: [];
 
-$newfields = array();
+$newfields = [];
 foreach ($fields as $field) {
 	if (is_array($field)) {
 		$newfields[] = 'GROUPSTART_'.intval(12 / count($field));
@@ -65,11 +65,14 @@ foreach ($fields as $field) {
 	switch($type) {
 		case 'rte':
 		case 'textarea':
-			$options = array(
+			$options = [
 				'type' => 'textarea',
 				'class' => "form-control autogrow $field",
 				'rows' => 3,
-			);
+			];
+			if (isset($schema[$field]['annotation'])) {
+				$options['annotation'] = $schema[$field]['annotation'];
+			}
 			if (in_array($field, $readonly)) {
 				$options['disabled'] = 'disabled';
 				$options['class'] .= ' uneditable-textarea';
@@ -82,12 +85,21 @@ foreach ($fields as $field) {
 
 		case 'select':
 			$method = Inflector::underscore(Inflector::pluralize($field));
-			$options = array(
+			$values = $model::$method();
+			$options = [
+				'wrap' => ['class' => 'form-group'],
 				'type' => 'select',
 				'class' => "form-control $field",
 				'data-switch' => $field,
-				'list' => $model::$method()
-			);
+				'list' => $values,
+			];
+			if (is_array($values) && sizeof($values) <= 6) {
+				//TODO: render inline
+			}
+
+			if (isset($schema[$field]['annotation'])) {
+				$options['annotation'] = $schema[$field]['annotation'];
+			}
 			if (isset($schema[$field]['null']) && $schema[$field]['null'] === true) {
 				$options['empty'] = true;
 			}
@@ -101,12 +113,15 @@ foreach ($fields as $field) {
 		break;
 
 		case 'configuration':
-			$options = array(
+			$options = [
 				'type' => 'select',
 				'class' => "form-control $field",
 				'data-switch' => 'configuration',
 				'list' => Configurations::find('list')
-			);
+			];
+			if (isset($schema[$field]['annotation'])) {
+				$options['annotation'] = $schema[$field]['annotation'];
+			}
 			if (isset($schema[$field]['null']) && $schema[$field]['null'] === true) {
 				$options['empty'] = true;
 			}
@@ -121,11 +136,14 @@ foreach ($fields as $field) {
 		break;
 
 		case 'ini':
-			$options = array(
+			$options = [
 				'type' => 'textarea',
 				'class' => 'form-control autogrow',
 				'rows' => 10,
-			);
+			];
+			if (isset($schema[$field]['annotation'])) {
+				$options['annotation'] = $schema[$field]['annotation'];
+			}
 			if (in_array($field, $readonly)) {
 				$options['disabled'] = 'disabled';
 				$options['class'] .= ' uneditable-input';
@@ -134,11 +152,14 @@ foreach ($fields as $field) {
 		break;
 
 		case 'neon':
-			$options = array(
+			$options = [
 				'type' => 'textarea',
 				'class' => 'form-control autogrow',
 				'rows' => 10,
-			);
+			];
+			if (isset($schema[$field]['annotation'])) {
+				$options['annotation'] = $schema[$field]['annotation'];
+			}
 			if (in_array($field, $readonly)) {
 				$options['disabled'] = 'disabled';
 				$options['class'] .= ' uneditable-input';
@@ -147,10 +168,13 @@ foreach ($fields as $field) {
 		break;
 
 		case 'integer':
-			$options = array(
+			$options = [
 				'type' => 'number',
 				'class' => 'form-control numeric',
-			);
+			];
+			if (isset($schema[$field]['annotation'])) {
+				$options['annotation'] = $schema[$field]['annotation'];
+			}
 			if (in_array($field, $readonly)) {
 				$options['disabled'] = 'disabled';
 				$options['class'] .= ' uneditable-input';
@@ -159,11 +183,14 @@ foreach ($fields as $field) {
 		break;
 
 		case 'double':
-			$options = array(
+			$options = [
 				'type' => 'number',
 				'step' => '0.01',
 				'class' => 'form-control numeric',
-			);
+			];
+			if (isset($schema[$field]['annotation'])) {
+				$options['annotation'] = $schema[$field]['annotation'];
+			}
 			if (in_array($field, $readonly)) {
 				$options['disabled'] = 'disabled';
 				$options['class'] .= ' uneditable-input';
@@ -173,9 +200,12 @@ foreach ($fields as $field) {
 
 		case 'date':
 			// TODO: datepicker
-			$options = array(
+			$options = [
 				'class' => 'form-control date',
-			);
+			];
+			if (isset($schema[$field]['annotation'])) {
+				$options['annotation'] = $schema[$field]['annotation'];
+			}
 			if (in_array($field, $readonly)) {
 				$options['disabled'] = 'disabled';
 				$options['class'] .= ' uneditable-input';
@@ -187,12 +217,15 @@ foreach ($fields as $field) {
 			$value = (is_object($binding->$field))
 				? $binding->$field->data()
 				: (array) $binding->$field;
-			$options = array(
+			$options = [
 				'type' => 'textarea',
 				'class' => "form-control autogrow $field",
 				'rows' => 3,
 				'value' => implode("\n", $value),
-			);
+			];
+			if (isset($schema[$field]['annotation'])) {
+				$options['annotation'] = $schema[$field]['annotation'];
+			}
 			if (in_array($field, $readonly)) {
 				$options['disabled'] = 'disabled';
 				$options['class'] .= ' uneditable-textarea';
@@ -201,9 +234,11 @@ foreach ($fields as $field) {
 		break;
 
 		case 'string':
-			$options = array(
-				'class' => 'form-control',
-			);
+
+			$options = ['class' => 'form-control'];
+			if (isset($schema[$field]['annotation'])) {
+				$options['annotation'] = $schema[$field]['annotation'];
+			}
 			if (in_array($field, $readonly)) {
 				$options['disabled'] = 'disabled';
 				$options['class'] .= ' uneditable-input';

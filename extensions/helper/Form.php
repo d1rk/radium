@@ -12,20 +12,21 @@ class Form extends \lithium\template\helper\Form {
 	 *
 	 * @var array
 	 */
-	protected $_strings = array(
+	protected $_strings = [
 		'button'         => '<button{:options}>{:title}</button>',
 		'checkbox'     	 => '<input type="checkbox" name="{:name}"{:options} />',
 		'checkbox-label' => '<label class="control-label"><input type="checkbox" name="{:name}"{:options} />{:title}</label>',
 		'checkbox-multi' => '<input type="checkbox" name="{:name}[]"{:options} />',
 		'checkbox-multi-group' => '{:raw}',
 		'error'          => '<span class="help-block">{:content}</span>',
+		'annotation'     => '<small class="help-block annotation">{:content}</small>',
 		'errors'         => '{:raw}',
 		'input'          => '<input type="{:type}" name="{:name}"{:options} />',
 		'file'           => '<input type="file" name="{:name}"{:options} />',
 		'form'           => '<form action="{:url}"{:options}>{:append}',
 		'form-end'       => '</form>',
 		'hidden'         => '<input type="hidden" name="{:name}"{:options} />',
-		'field'          => '<div{:wrap}>{:label}<div class="controls">{:input}{:error}</div></div>',
+		'field'          => '<div{:wrap}>{:label}<div class="controls">{:annotation}{:input}{:error}</div></div>',
 		'field-checkbox' => '<div{:wrap}>{:input}<div class="controls">{:label}{:error}</div></div>',
 		'field-radio'    => '<div{:wrap}>{:input}<div class="controls">{:label}{:error}</div></div>',
 		'label'          => '<label for="{:id}" class="control-label"{:options}>{:title}</label>',
@@ -46,7 +47,7 @@ class Form extends \lithium\template\helper\Form {
 		'money'          => '<div class="input-prepend"><span class="add-on">$</span><input type="text" name="{:name}"{:options} /></div>',
 		'date'           => '<input type="text" data-date-format="yyyy-mm-dd" class="date-field" name="{:name}"{:options} />',
 		'submit-button'  => '<button type="submit"{:options}>{:name}</button>'
-	);
+	];
 
 	/**
 	 * Generates an HTML `<input type="checkbox" />` object.
@@ -59,8 +60,8 @@ class Form extends \lithium\template\helper\Form {
 	 *        - Any other options specified are rendered as HTML attributes of the element.
 	 * @return string Returns a `<input />` tag with the given name and HTML attributes.
 	 */
-	public function checkbox($name, array $options = array()) {
-		$defaults = array('value' => '1', 'hidden' => true, 'label' => '');
+	public function checkbox($name, array $options = []) {
+		$defaults = ['value' => '1', 'hidden' => true, 'label' => ''];
 		$options += $defaults;
 		$default = $options['value'];
 		$key = $name;
@@ -73,7 +74,7 @@ class Form extends \lithium\template\helper\Form {
 			$options['checked'] = ($this->binding($key)->data == $default);
 		}
 		if ($scope['hidden']) {
-			$out = $this->hidden($name, array('value' => '', 'id' => false));
+			$out = $this->hidden($name, ['value' => '', 'id' => false]);
 		}
 		$options['value'] = $scope['value'];
 		if (!empty($scope['label'])) {
@@ -83,7 +84,7 @@ class Form extends \lithium\template\helper\Form {
 		return $out . $this->_render(__METHOD__, $template, compact('name', 'options', 'title'));
 	}
 
-	public function button($title = null, array $options = array()) {
+	public function button($title = null, array $options = []) {
 		if (isset($options['icon'])) {
 			$icon = $options['icon'];
 			$title = sprintf('<i class="fa fa-%s"></i> %s', $icon, $title);
@@ -92,7 +93,7 @@ class Form extends \lithium\template\helper\Form {
 		return parent::button($title, $options);
 	}
 
-	public function create($bindings = null, array $options = array()) {
+	public function create($bindings = null, array $options = []) {
 		$result = parent::create($bindings, $options);
 		if ($this->_binding) {
 			$model = $this->_binding->model();
@@ -112,27 +113,35 @@ class Form extends \lithium\template\helper\Form {
 		return parent::end();
 	}
 
-	public function field($name, array $options = array()) {
+	public function field($name, array $options = []) {
 		if (is_array($name)) {
 			return $this->_fields($name, $options);
 		}
-		list(, $options, $template) = $this->_defaults(__FUNCTION__, $name, $options);
+
+		$method = __FUNCTION__;
+		if (isset($options['type']) && !empty($this->_config['field-' . $options['type']])) {
+			$method = 'field-' . $options['type'];
+		}
+		[$i, $options, $template] = $this->_defaults($method, $name, $options);
+
 
 		$meta = (isset($this->schema) && is_object($this->schema))
 			? $this->schema->fields($name)
-			: array();
+			: [];
 
-		$defaults = array(
+		$defaults = [
 			'label' => null,
 			'type' => isset($options['list']) ? 'select' : 'text',
 			'template' => $template,
-			'wrap' => array('class' => 'form-group'),
-			'list' => null
-		);
+			'wrap' => ['class' => 'form-group'],
+			'annotation' => null,
+			'list' => null,
+			'error' => []
+		];
 		if (!empty($meta['required'])) {
 			$defaults['required'] = true;
 		}
-		list($options, $field) = $this->_options($defaults, $options);
+		[$options, $field] = $this->_options($defaults, $options);
 
 		if ($this->_binding) {
 			$errors = $this->_binding->errors();
@@ -146,20 +155,61 @@ class Form extends \lithium\template\helper\Form {
 			$options = $this->_autoSelects($name, $options);
 		}
 
-		return parent::field($name, $options);
+		$label = $input = null;
+		$wrap = $options['wrap'];
+		$type = $options['type'];
+		$list = $options['list'];
+		$annotation = $options['annotation'];
+		$error = $options['error'];
+		$template = $options['template'];
+		$notText = $template === 'field' && $type !== 'text';
+
+		if ($notText && $this->_context->strings('field-' . $type)) {
+			$template = 'field-' . $type;
+		}
+		if (($options['label'] === null || $options['label']) && $options['type'] !== 'hidden') {
+			if (!$options['label']) {
+				$options['label'] = Inflector::humanize(preg_replace('/[\[\]\.]/', '_', $name));
+			}
+			$label = $this->label(isset($options['id']) ? $options['id'] : '', $options['label']);
+		}
+
+		if ($type === 'text' && $list) {
+			if (is_array($list)) {
+				list($list, $datalist) = $this->_datalist($list, $options);
+			}
+			$field['list'] = $list;
+		} else {
+			$datalist = null;
+		}
+
+		$call = ($type === 'select') ? [$name, $list, $field] : [$name, $field];
+		$input = call_user_func_array([$this, $type], $call);
+		
+		if ($error !== false && $this->_binding) {
+			$error = $this->error($name, null, ['messages' => $error]);
+		} else {
+			$error = null;
+		}
+		if ($annotation) {
+			$annotation = $this->_render(__METHOD__, 'annotation', ['content' => $annotation]);
+		}
+		return $this->_render(__METHOD__, $template, compact(
+			'wrap', 'label', 'input', 'datalist', 'error', 'annotation'
+		));
 	}
 
-	public function select($name, $list = array(), array $options = array()) {
-		$defaults = array('multiple' => false, 'hidden' => true);
+	public function select($name, $list = [], array $options = []) {
+		$defaults = ['multiple' => false, 'hidden' => true];
 		$options += $defaults;
 		$out = parent::select($name, $list, $options);
 		if($options['multiple'] && $options['hidden']) {
-			return $this->hidden($name.'[]', array('value' => '', 'id' => false)) . $out;
+			return $this->hidden($name.'[]', ['value' => '', 'id' => false]) . $out;
 		}
 		return $out;
 	}
 
-	protected function _autoSelects($name, array $options = array()) {
+	protected function _autoSelects($name, array $options = []) {
 		$model = $this->_binding->model();
 		$method = Inflector::pluralize($name);
 		$rules = $this->instance->validates;
@@ -176,7 +226,7 @@ class Form extends \lithium\template\helper\Form {
 			if (is_array($rules[$name][0])) {
 				$rule_list = $rules[$name];
 			} else {
-				$rule_list = array($rules[$name]);
+				$rule_list = [$rules[$name]];
 			}
 
 			foreach ($rule_list as $rule) {
