@@ -18,16 +18,16 @@ Inflector::rules('uninflected', 'status');
 /*
  * apply new validation rules to the Validator class, because we need them
  */
-Validator::add(array(
+Validator::add([
 	'sha1' => '/^[A-Fa-f0-9]{40}$/',
-	'slug' => '/^[a-z0-9\_\-\.]*$/',			// only lowercase, digits and dot
-	'loose_slug' => '/^[a-zA-Z0-9\_\-\.]*$/',	// both cases, digits and dot
-	'strict_slug' => '/^[a-z][a-z0-9\_\-]*$/',  // only lowercase, starting with letter, no dot
+	'slug' => '/^[a-z0-9\_\-\.]*$/',           // only lowercase, digits and dot
+	'loose_slug' => '/^[a-zA-Z0-9\_\-\.]*$/',  // both cases, digits and dot
+	'strict_slug' => '/^[a-z][a-z0-9\_\-]*$/', // only lowercase, starting with letter, no dot
 	'isUnique' => function ($value, $format, $options) {
-		$conditions = array($options['field'] => $value);
+		$conditions = [$options['field'] => $value];
 		foreach ((array) $options['model']::meta('key') as $field) {
 			if (!empty($options['values'][$field])) {
-				$conditions[$field] = array('!=' => $options['values'][$field]);
+				$conditions[$field] = ['!=' => $options['values'][$field]];
 			}
 		}
 		$fields = $options['field'];
@@ -65,7 +65,7 @@ Validator::add(array(
 			if (preg_match('/([0-9\.]+) ?([a-z]*)/i', $data['size'], $matches)) {
 				$number = $matches[1];
 				$suffix = $matches[2];
-				$suffixes = array(""=> 0, "Bytes"=>0, "KB"=>1, "MB"=>2, "GB"=>3, "TB"=>4, "PB"=>5);
+				$suffixes = [''=> 0, 'Bytes'=>0, 'KB'=>1, 'MB'=>2, 'GB'=>3, 'TB'=>4, 'PB'=>5];
 				if (isset($suffixes[$suffix])) {
 					$data['size'] = round($number * pow(1024, $suffixes[$suffix]));
 				}
@@ -73,4 +73,4 @@ Validator::add(array(
 		}
 		return $data['size'] >= $size;
 	},
-));
+]);
