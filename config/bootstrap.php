@@ -9,15 +9,24 @@
 define('RADIUM_PATH', dirname(__DIR__));
 
 use lithium\core\Libraries;
+use radium\util\File;
 use Handlebars\Autoloader;
 
-if (!Libraries::get('li3_behaviors')) Libraries::add('li3_behaviors');
+if (!Libraries::get('li3_behaviors')) {
+	Libraries::add('li3_behaviors');
+}
 
-Libraries::add('Parsedown', [
-	'path' => RADIUM_PATH . '/libraries/Parsedown',
-	'includePath' => true,
-	'prefix' => false,
-]);
+if (!Libraries::get('Parsedown')) {
+	Libraries::add('Parsedown', [
+		'path' => RADIUM_PATH . '/libraries/Parsedown',
+		'includePath' => true,
+		'prefix' => false,
+	]);
+}
+
+Libraries::paths(File::paths());
+
+
 
 require RADIUM_PATH . '/libraries/Handlebars/Autoloader.php';
 Autoloader::register();

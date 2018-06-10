@@ -19,22 +19,6 @@ use Nette\Neon\Neon as NeonRenderer;
 class Neon {
 
 	/**
-	 * holds the renderer instance
-	 *
-	 * @var object
-	 */
-	public static $_renderer = null;
-
-	/**
-	 * controls where neon-files can reside inside a library and automatically be found
-	 *
-	 * @var string|array
-	 */
-	public static $_paths = array(
-		'neons' => array('{:library}\data\{:class}\{:name}.neon'),
-	);
-
-	/**
 	 * encodes given $input to neon format syntax
 	 *
 	 * @see radium\util\Neon::renderer()
@@ -43,7 +27,7 @@ class Neon {
 	 * @return string the neon markup that represents given `$input`
 	 */
 	public static function encode($input, $options = null) {
-		return static::renderer()->encode($input, $options);
+		return NeonRenderer::encode($input, $options);
 	}
 
 	/**
@@ -56,44 +40,76 @@ class Neon {
 	 * @return mixed generated php structure derived from given `$input`
 	 */
 	public static function decode($content) {
-		return static::renderer()->decode($content);
+		return NeonRenderer::decode($content);
 	}
 
 	/**
-	 * parses a given file and its content with neon parser and returns its data structure
+	 * Locate files of a specific type within libraries.
+	 * 
+	 * This method allows find a list of files with path, relative to their
+	 * corresponding libraries, they exist in. Each of these files can be
+	 * loaded (and converted) by `File::load()`.
+	 * 
+	 * @see radium\util\File::locate()
+	 * @param string $scope The find scope, can be anything as string of type
+	 *           `$library`, `$model` or a specific folder name, i.e. a certain
+	 *           type of data-files. If given a `$library` (e.g. `radium`) it returns
+	 *           all data files that are below that library, according to `paths`
+	 *           If given a fully namespaced model class `$model`
+	 *           (e.g. `radium\models\Contents`) a check is performed, if a
+	 *           method named `meta('source')` can be called, as this returns
+	 *           the name of the `source` of a given model, therefore defining
+	 *           the sub-folder to look for; in our example `contents`.
+	 *           If given a string (e.g. `contents`), the name of the subfolder
+	 *           is given directly, therefore defining a specific type of data
+	 *           files to look for. This can be used for data-files of a certain
+	 *           type that do not match a model, e.g. `nav`.
+	 * @param array $options Options for the query. By default, accepts:
+	 *        - `collect`: Wrap list of files in a `Collection` class, or returns
+	 *           just a plain array with a list of filenames, defaults to true.
+	 *        - `paths`: additional search paths to look for in 
+	 *        - `load`: If set to true, every found file`s content is being
+	 *           loaded using `File::load()`, which automatically converts the
+	 *           content of that file from its data-format to its decoded result.
+	 *           Hint: Should only be used with care! This could potentially
+	 *           load a lot of information and can significantly raise
+	 *           memory consumption, File IO and Runtime of the script.
+	 * @return mixed
+	 */
+	public static function locate($scope = null, array $options = []) {
+		return File::locate('neon', $scope, $options);
+	}
+
+	/**
+	 * Loads a given file, parses it with neon and returns the result
 	 *
 	 * This method is able to understand library-relative paths. If filename starts with a valid
 	 * library name followed by a slash, i.e. `radium/some-path/file.ext` it will find that file
 	 * on its own within the file-system. It automatically detects the base-path for that library
 	 * and will find the file within that library.
 	 *
-	 * @see radium\util\File::contents()
+	 * @see radium\util\File::load()
 	 * @param string $file full path to file or a library-related path, starting with `$library/`
 	 * @param string $field only return that field from loaded file or null if not present
 	 * @return mixed generated php structure derived from neon-parsed file
 	 */
 	public static function file($file, $field = null) {
-		return File::contents($file, $field, array('type' => 'neon'));
-	}
-
-	/**
-	 * instantiates and returns instance of neon-renderer
-	 *
-	 * @return object instance of NeonRenderer
-	 */
-	public static function renderer() {
-		if (is_null(static::$_renderer)) {
-			Libraries::add('Neon', array('path' => RADIUM_PATH . '/libraries/neon'));
-			static::$_renderer = new NeonRenderer();
-		}
-		return static::$_renderer;
+		return File::load($file, $field);
 	}
 
 	/**
 	 * Loads entities and records from file-based structure
+	 * 
+	 * 
+	 * 
+	 * Neon::file('devices.neon');
+	 * Neon::find('li3_airy\models\Devices', 'all', ['id' => 'foo']);
+	 * Neon::files('li3_airy\models\Devices');
 	 *
+	 * 
+	 * 
 	 * Trys to implement a similar method to load datasets not from database, but rather from
-	 * a file that holds all relevant model data and is laid into the filesystem of each library.
+	 * a file that holds all relevant model data and is laid into the filesystem of a library.
 	 * This allows for easy default-data to be loaded without using a database as backend.
 	 *
 	 * Put your files into `{:library}\data\{:class}\{:name}.neon` and let the content be found
@@ -121,20 +137,45 @@ class Neon {
 	 *               If `$type` is `first` returns null or the correct entity with given data
 	 *               If `$type` is `all` returns null or a DocumentSet object with loaded entities
 	 */
-	public static function find($model, $type, array $options = array()) {
-		$defaults = array('conditions' => null, 'fields' => null);
+	public static function find($model, $type, array $options = []) {
+		$defaults = ['conditions' => null, 'fields' => null];
 		$options += $defaults;
 
-		$paths = self::$_paths;
-		Libraries::paths($paths);
-		$meta = is_array($model) ? $model : $model::meta();
-		$locate = sprintf('neons.%s', $meta['source']);
-		$data = Libraries::locate($locate, null, array('namespaces' => true));
-		$files = new Collection(compact('data'));
-		unset($data);
-		$files->each(function($file){
-			return str_replace('\\', '/', $file).'neon';
-		});
+
+
+		$files = static::locate($model);
+// var_dump($files);
+// var_dump($files);exit;	
+
+		foreach ($files as $file) {
+			// $content = static::file($file);
+			$content = File::load($file, null, ['type' => 'json']);
+			var_dump($content);
+		}
+
+		
+		var_dump($files);exit;
+		if ($files->count() == 0) {
+			return false;
+		}
+
+		$meta = is_callable([$model, 'meta']) ? $model::meta() : $model;
+		var_dump($model);
+
+/*
+	RE-USE Filters foreach
+		$filters = $options['filters'];
+		$pattern = sprintf('#\/%s/#', $source);
+		$filters[] = function($file) use ($pattern) {
+			return (bool) preg_match($pattern, $file);
+		};
+		
+		foreach ($filters as $filter) {
+			$files = array_filter($files, $filter);
+		}
+*/
+
+
 
 		extract($options);
 		if (isset($conditions['slug'])) {
@@ -144,11 +185,13 @@ class Neon {
 			$field = $meta['key'];
 		}
 		if (!isset($field)) {
-			$field = 'all';
+			// $field = 'all';
 			// var_dump($field);
 			// return array();
 		}
 		$value = $conditions[$field];
+		var_dump($value, $conditions, $field);
+		exit;
 
 		switch (true) {
 			case is_string($value):
@@ -191,7 +234,7 @@ class Neon {
 		// we found one (!) file with name 'all.neon', this is the entire set
 		if ($type == 'all' && count($files) == 1 && (substr($files->first(), -strlen('all.neon')) === 'all.neon')) {
 			$rows = self::file($files->first());
-			$data = array();
+			$data = [];
 			foreach($rows as $row) {
 				$data[] = $model::create($row);
 			}
@@ -203,7 +246,7 @@ class Neon {
 		}
 
 		if ($type == 'all' && count($files)) {
-			$data = array();
+			$data = [];
 			foreach ($files as $file) {
 				$current = self::file($file);
 
@@ -225,6 +268,8 @@ class Neon {
 		}
 		return false;
 	}
+
+
 
 }
 

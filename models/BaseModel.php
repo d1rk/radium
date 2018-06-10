@@ -54,7 +54,7 @@ class BaseModel extends \lithium\data\Model {
 	 * limit or page. This is meant to enable basic loading of id- or slug-based entity lookups.
 	 *
 	 * @see radium\util\Neon::file()
-	 * @see radium\util\File::contents()
+	 * @see radium\util\File::load()
 	 * @param string $type The find type, which is looked up in `Model::$_finders`. By default it
 	 *        accepts `all`, `first`, `list` and `count`,
 	 * @param array $options Options for the query. By default, accepts:

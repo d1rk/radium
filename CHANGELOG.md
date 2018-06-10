@@ -98,18 +98,42 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   ]
   ```
 
+- Added new method `locate()` to `radium\util\File`, which uses path-based lookups
+  (similar to what you know and love from Libraries) for data-files within libraries.
+  This allows easy locating (and loading) of files of various types, including those,
+  that come within other libraries. There are two locations defined:
+
+  ```php
+  protected static $_paths = [
+    'neon' => [
+      '{:library}\neon\{:class}\{:name}.neon',
+      '{:library}\data\{:class}\{:name}.neon',
+    ],
+    'json' => [
+      '{:library}\json\{:class}\{:name}.json',
+      '{:library}\data\{:class}\{:name}.json',
+    ],
+  ];
+  ```
+
+  This allows to locate e.g. json files using `File::locate('contents')` which can then
+  be loaded via `File::load($file)`. As a convenience the `Json` and `Neon` class
+  now have the methods `locate` and `file` accordingly, to locate and load files
+  of these types, like that `Neon::locate('contents')` and `Neon::file('contents')`
+
 - Added new method on Scaffolded Controllers, named `schema` which displays a comprehensible list
-  of fields and other useful information about all fields of a model Schema definition.
-- Added Parsedown as library, therefore implementing the Markdown Converter.
+  of fields and other useful information about all fields of a models Schema definition.
+- Added Parsedown as library, thus implementing the Markdown Converter.
 - Added more DataObject information in scaffolded-views, i.e. `status`, `type` as well
   as `created` and `updated` information to default views.
 
 ### Changed
 
+- Renamed `File::contents` to `File::load`
 - Renamed `Versions` Model to `Revisions`
 - The `BaseModel` has been split into `BaseModel` and `DataModel`. Only `DataModel` are
   thought to be used as Scaffolded Models.
-- Uses Trait for Scaffold Logic, therefore allows for easier integration of Scaffold
+- Uses Trait for Scaffold Logic, which allows easier integration of Scaffold
   into User-land Controllers.
 - Added new layout for scaffolded views, named `scaffold` for easier separation
 

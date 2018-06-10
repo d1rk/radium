@@ -17,38 +17,38 @@ class Converter extends \lithium\core\Adaptable {
 	 *
 	 * @var array
 	 */
-	protected static $_configurations = array(
-		'array' => array(
+	protected static $_configurations = [
+		'array' => [
 			'adapter' => 'Ini',
-		),
-		'ini' => array(
+		],
+		'ini' => [
 			'adapter' => 'Ini',
-		),
-		'import' => array(
+		],
+		'import' => [
 			'adapter' => 'Json',
-		),
-		'json' => array(
+		],
+		'json' => [
 			'adapter' => 'Json',
-		),
-		'neon' => array(
+		],
+		'neon' => [
 			'adapter' => 'Neon',
-		),
-		'plain' => array(
+		],
+		'plain' => [
 			'adapter' => 'Plain',
-		),
-		'html' => array(
+		],
+		'html' => [
 			'adapter' => 'Html',
-		),
-		'mustache' => array(
+		],
+		'mustache' => [
 			'adapter' => 'Mustache',
-		),
-		'handlebars' => array(
+		],
+		'handlebars' => [
 			'adapter' => 'Handlebars',
-		),
-		'markdown' => array(
+		],
+		'markdown' => [
 			'adapter' => 'Markdown',
-		),
-	);
+		],
+	];
 
 	/**
 	 * Libraries::locate() compatible path to adapters for this class.
@@ -68,9 +68,7 @@ class Converter extends \lithium\core\Adaptable {
 	 * @return string the rendered content
 	 * @filter
 	 */
-	public static function get($name, $content = null, $data = array(), array $options = array()) {
-		$defaults = array();
-		$options += $defaults;
+	public static function get($name, $content = null, $data = [], array $options = []) {
 		$params = compact('name', 'content', 'data', 'options');
 		return Filters::run(get_called_class(), __FUNCTION__, $params, function($params) {
 			extract($params);
@@ -92,7 +90,7 @@ class Converter extends \lithium\core\Adaptable {
 	 * @return array Returns the final array of settings for the given named configuration.
 	 */
 	protected static function _initConfig($name, $config) {
-		$defaults = array('adapter' => ucwords($name), 'filters' => array());
+		$defaults = ['adapter' => ucwords($name), 'filters' => []];
 		return (array) $config + $defaults;
 	}
 
